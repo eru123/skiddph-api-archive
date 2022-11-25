@@ -16,7 +16,7 @@ jobs:
               uses: eru123/actions-env@v0.0.4
               with:
                 file: .env
-                prefix: ENV_echo 
+                prefix: ENV_
               env:
                 ENV_TEST: ${{secrets.TEST}}
                 ENV_TEST2: hello
