@@ -16,9 +16,11 @@ jobs:
               uses: eru123/actions-env@v0.0.4
               with:
                 file: .env
-                prefix: ENV_
+                prefix: ENV_echo 
               env:
                 ENV_TEST: ${{secrets.TEST}}
+                ENV_TEST2: hello
+                ENV_TEST3: ${{secrets.FTP_SERVER}}
 
             - name: Sync files
               uses: SamKirkland/FTP-Deploy-Action@4.3.0
