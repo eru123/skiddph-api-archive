@@ -18,7 +18,7 @@ jobs:
                 file: .env
                 prefix: ENV_
               env:
-                  ENV_TEST: ${{secrets.TEST}}
+                ENV_TEST: ${{secrets.TEST}}
 
             - name: Sync files
               uses: SamKirkland/FTP-Deploy-Action@4.3.0
