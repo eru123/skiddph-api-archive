@@ -12,17 +12,14 @@ jobs:
             - name: Checkout Repository
               uses: actions/checkout@v3
 
-            - name: Install Node.js
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 16
-
             - name: Generate .env file
-              uses: eru123/actions-env@v0.0.1
+              uses: eru123/actions-env@v0.0.2
               with:
                   file: .env
                   prefix: ENV_
-                  ENV_TEST: ${{secrets.TEST}}
+                  env: |
+                    ENV_TEST=${{secrets.TEST}}
+                    ENV_TEST2=${{secrets.TEST}}
 
             - name: Sync files
               uses: SamKirkland/FTP-Deploy-Action@4.3.0
