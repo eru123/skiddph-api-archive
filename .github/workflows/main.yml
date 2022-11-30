@@ -18,9 +18,13 @@ jobs:
                 file: .env
                 prefix: ENV_
               env:
-                ENV_TEST: ${{secrets.TEST}}
-                ENV_TEST2: hello
-                ENV_TEST3: ${{secrets.FTP_SERVER}}
+                ENV_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+              
+            - name: Install Composer Dependencies
+              uses: php-actions/composer@v6
+              with:
+                dev: no
+                args: --profile --ignore-platform-reqs
 
             - name: Sync files
               uses: SamKirkland/FTP-Deploy-Action@4.3.0
@@ -31,3 +35,16 @@ jobs:
                   password: ${{secrets.FTP_PASSWORD}}
                   server-dir: api/
                   state-name: api-state.json
+                  exclude: |
+                    **/.git*
+                    **/.git*/**
+                    **/.github*
+                    **/.github*/**
+                    **/.vscode*
+                    **/.vscode*/**
+                    **/node_modules*
+                    **/node_modules*/**
+                    composer.json
+                    composer.lock
+                    LICENSE
+                    README.md

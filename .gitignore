@@ -1,3 +1,5 @@
 composer.phar
 /vendor/
 .github/sftp.json
+.env
+.vscode/sftp.json

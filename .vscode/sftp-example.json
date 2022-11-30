@@ -1,0 +1,23 @@
+{
+    "name": "",
+    "host": "",
+    "protocol": "ftp",
+    "secure": true,
+    "port": 21,
+    "username": "",
+    "password": "",
+    "remotePath": "/api",
+    "uploadOnSave": true,
+    "ignore": [
+        ".vscode",
+        ".gitignore",
+        ".git",
+        ".github",
+        ".env",
+        "vendor",
+        "composer.lock",
+        "composer.json",
+        "LICENSE",
+        "README.md"
+    ]
+}
