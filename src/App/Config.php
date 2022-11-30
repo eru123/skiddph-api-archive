@@ -16,7 +16,7 @@ class Config
      * @param   mixed   $value  The value of the configuration.
      * @return  void
      */
-    final public static function set(string $key, $value): void
+    final public static function set(string $key, mixed $value): void
     {
         self::$data[$key] = $value;
     }
@@ -27,9 +27,9 @@ class Config
      * @param   mixed   $default    The default value to return if the key is not found.
      * @return  mixed  The value of the configuration.
      */
-    final public static function get(string $key, $default = null)
+    final public static function get(string $key, mixed $default = null): mixed
     {
-        return self::$data[$key] || $default;
+        return self::$data[$key] ?? $default;
     }
 
     /**
