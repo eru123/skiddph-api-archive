@@ -19,7 +19,13 @@ jobs:
                 prefix: ENV_
               env:
                 ENV_JWT_SECRET: ${{ secrets.JWT_SECRET }}
-              
+            
+            - name: Cache Composer dependencies
+              uses: actions/cache@v3
+              with:
+                path: /tmp/composer-cache
+                key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+                
             - name: Install Composer Dependencies
               uses: php-actions/composer@v6
               with:
@@ -48,3 +54,7 @@ jobs:
                     composer.lock
                     LICENSE
                     README.md
+                    DOCKER_ENV
+                    docker_tag
+                    Dockerfile-php-build
+                    output.log
