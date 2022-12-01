@@ -3,6 +3,7 @@
 namespace Database;
 
 use Exception;
+use PDO;
 
 /**
  * ORM Helper Functions
@@ -96,5 +97,44 @@ class Helper
         }
 
         return implode(" $operator ", $result);
+    }
+
+    /**
+     * Convert value to SQL string
+     * @param mixed $value
+     * @return string
+     */
+    public static function escape(PDO $pdo, mixed $value): mixed
+    {
+        if (is_null($value)) {
+            return 'NULL';
+        } else if (is_bool($value)) {
+            return $value ? 1 : 0;
+        } else if (is_numeric($value)) {
+            return $value;
+        } else if (is_string($value)) {
+            return $pdo->quote($value);
+        } else if (is_array($value)) {
+            foreach ($value as $key => $val) {
+                $value[$key] = self::escape($pdo, $val);
+            }
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Checks if data is a multi-dimensional array
+     * @param array $data
+     * @return bool
+     */
+    public static function isMultiArray(array $data): bool
+    {
+        foreach ($data as $value) {
+            if (is_array($value)) {
+                return true;
+            }
+        }
+        return false;
     }
 }
