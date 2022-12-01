@@ -5,8 +5,8 @@
     },
     "autoload": {
         "psr-4": {
-            "App\\": "src/App/",
-            "Lib\\": "src/Lib/"
+            "Core\\": "src/Core/",
+            "Database\\": "src/Database/"
         }
     }
 }
