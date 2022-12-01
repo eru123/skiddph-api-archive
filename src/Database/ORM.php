@@ -393,7 +393,13 @@ class ORM extends Helper
     public function data(array $data): self
     {
         $key = 'data';
-        $this->query[$key][] = $data;
+        $data = self::escape($this->pdo, $data);
+        if (self::isMultiArray($data)) {
+            $this->query[$key] = array_merge($this->query[$key], $data);
+        } else {
+            $this->query[$key][] = $data;
+        }
+        $this->query[$key] = $data;
         $this->lastQueryKey = $key;
         return $this;
     }
