@@ -3,8 +3,6 @@
 namespace Database;
 
 use PDO;
-use PDOException;
-use Exception;
 use PDOStatement;
 
 /**
