@@ -128,11 +128,13 @@ class Helper
      * @param array $data
      * @return bool
      */
-    public static function isMultiArray(array $data): bool
+    public static function isMultiArray(mixed $data): bool
     {
-        foreach ($data as $value) {
-            if (is_array($value)) {
-                return true;
+        if(is_array($data)) {
+            foreach($data as $value) {
+                if(is_array($value)) {
+                    return true;
+                }
             }
         }
         return false;
