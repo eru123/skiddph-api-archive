@@ -23,11 +23,11 @@ class Database
     {
         if (!isset(self::$connections[$key])) {
             $cfg = new PluginConfig('DATABASES');
-            $pdoArgs = $cfg->get($key);
-            if ($pdoArgs === null) {
+            $pdo_args = $cfg->get($key);
+            if ($pdo_args === null) {
                 throw new Exception("Database connection not found: $key");
             }
-            self::$connections[$key] = new PDO(...$pdoArgs);
+            self::$connections[$key] = new PDO(...$pdo_args);
         }
 
         return new ORM(self::$connections[$key]);
