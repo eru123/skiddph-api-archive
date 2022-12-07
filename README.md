@@ -49,6 +49,22 @@ An out of the box complete and centralized general purpose API system that aims 
      - [ ] Manual Input Support
    - [ ] Time Tracking
    - [ ] Salary Management System
+  - [ ] Learning Management System
+   - [ ] Forum
+   - [ ] Library System
+   - [ ] Attendance System
+   - [ ] Permission Based Storage
+   - [ ] Registrar
+   - [ ] Teacher
+    - [ ] Work Load Schedule Distribution
+    - [ ] Grading System
+    - [ ] Exam System
+    - [ ] Discussion
+    - [ ] Proctor Support
+    - [ ] Syllabus
+   - [ ] Student
+    - [ ] Group Discussion
+    
  
 # Setup
 The system is planned to host on any system that has an ftp server for uploading files, with the help of GitHub actions. As of now, this is the only supported deployment method, but we also planned to support on other major platforms such as AWS, Azure, GCP, Docker, Vercel, Heroku, and Etc.
