@@ -56,14 +56,14 @@ An out of the box complete and centralized general purpose API system that aims 
    - [ ] Permission Based Storage
    - [ ] Registrar
    - [ ] Teacher
-    - [ ] Work Load Schedule Distribution
-    - [ ] Grading System
-    - [ ] Exam System
-    - [ ] Discussion
-    - [ ] Proctor Support
-    - [ ] Syllabus
+     - [ ] Work Load Schedule Distribution
+     - [ ] Grading System
+     - [ ] Exam System
+     - [ ] Discussion
+     - [ ] Proctor Support
+     - [ ] Syllabus
    - [ ] Student
-    - [ ] Group Discussion
+     - [ ] Group Discussion
     
  
 # Setup
