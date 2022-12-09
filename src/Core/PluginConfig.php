@@ -35,10 +35,10 @@ class PluginConfig
     /**
      * Set a configuration value.
      * @param   string  $key    The key of the configuration.
-     * @param   mixed   $value  The value of the configuration.
+     * @param   mixed $value  The value of the configuration.
      * @return  self
      */
-    final public function set(string $key, mixed $value): self
+    final public function set(string $key, $value): self
     {   
         if(!isset(self::$data[$this->plugin])){
             self::$data[$this->plugin] = [];
@@ -53,7 +53,7 @@ class PluginConfig
      * @param   mixed   $default    The default value to return if the key is not found.
      * @return  mixed  The value of the configuration.
      */
-    final public function get(string $key, mixed $default = null): mixed
+    final public function get(string $key, mixed $default = null)
     {
         return self::$data[$this->plugin][$key] ?? $default;
     }
