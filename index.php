@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
-use Lib\URL;
+use App\Lib\URL;
 
 Dotenv::createImmutable(__DIR__)->load();
 
