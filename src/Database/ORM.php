@@ -1,6 +1,6 @@
 <?php
 
-namespace Database;
+namespace App\Database;
 
 use PDO;
 use PDOStatement;
@@ -40,7 +40,6 @@ class ORM extends Helper
      */
     private $lastQueryKey = '';
 
-
     /**
      * Create a new instance of the ORM
      * @param PDO $pdo
@@ -48,6 +47,22 @@ class ORM extends Helper
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
+    }
+
+    /**
+     * Get PDO instance
+     */
+    public function pdo(): PDO
+    {
+        return $this->pdo;
+    }
+
+    /**
+     * Get PDOStatement instance
+     */
+    public function stmt(): PDOStatement
+    {
+        return $this->stmt;
     }
 
     /**

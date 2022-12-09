@@ -1,6 +1,6 @@
 <?php
 
-namespace Database;
+namespace App\Database;
 
 use Exception;
 use PDO;
@@ -102,7 +102,7 @@ class Helper
     /**
      * Convert value to SQL string
      * @param mixed $value
-     * @return string
+     * @return mixed
      */
     public static function escape(PDO $pdo, mixed $value): mixed
     {
@@ -125,7 +125,7 @@ class Helper
 
     /**
      * Checks if data is a multi-dimensional array
-     * @param array $data
+     * @param mixed $data
      * @return bool
      */
     public static function isMultiArray(mixed $data): bool

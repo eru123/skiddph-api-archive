@@ -1,6 +1,6 @@
 <?php
 
-namespace Core;
+namespace App\Core;
 
 /**
  * 
@@ -11,7 +11,7 @@ class PluginConfig
      * Holds the static key-value pairs of the configuration.
      * @var     array
      */
-    private static $data;
+    private static $data = [];
 
     /**
      * Holds the current plugin key.
@@ -26,7 +26,7 @@ class PluginConfig
      */
     public function __construct(string $pluginName)
     {
-        self::$plugin = $pluginName;
+        $this->plugin = $pluginName;
         if (!isset(self::$data[$pluginName])) {
             self::$data[$pluginName] = [];
         }
@@ -35,15 +35,15 @@ class PluginConfig
     /**
      * Set a configuration value.
      * @param   string  $key    The key of the configuration.
-     * @param   mixed   $value  The value of the configuration.
+     * @param   mixed $value  The value of the configuration.
      * @return  self
      */
-    final public function set(string $key, mixed $value): self
+    final public function set(string $key, $value): self
     {   
         if(!isset(self::$data[$this->plugin])){
             self::$data[$this->plugin] = [];
         }
-        self::$data[self::$plugin][$key] = $value;
+        self::$data[$this->plugin][$key] = $value;
         return $this;
     }
 
@@ -53,9 +53,9 @@ class PluginConfig
      * @param   mixed   $default    The default value to return if the key is not found.
      * @return  mixed  The value of the configuration.
      */
-    final public function get(string $key, mixed $default = null): mixed
+    final public function get(string $key, mixed $default = null)
     {
-        return self::$data[self::$plugin][$key] ?? $default;
+        return self::$data[$this->plugin][$key] ?? $default;
     }
 
     /**
@@ -65,7 +65,7 @@ class PluginConfig
      */
     final public function has(string $key): bool
     {
-        return isset(self::$data[self::$plugin][$key]);
+        return isset(self::$data[$this->plugin][$key]);
     }
 
     /**
@@ -74,7 +74,7 @@ class PluginConfig
      */
     final public function all(): array
     {
-        return self::$data[self::$plugin];
+        return self::$data[$this->plugin];
     }
 
     /**
@@ -84,7 +84,7 @@ class PluginConfig
      */
     final public function delete(string $key): self
     {
-        unset(self::$data[self::$plugin][$key]);
+        unset(self::$data[$this->plugin][$key]);
         return $this;
     }
 
@@ -94,7 +94,7 @@ class PluginConfig
      */
     final public function clear(): self
     {
-        self::$data[self::$plugin] = [];
+        self::$data[$this->plugin] = [];
         return $this;
     }
 
@@ -104,7 +104,7 @@ class PluginConfig
      */
     final public function destroy(): void
     {
-        unset(self::$data[self::$plugin]);
+        unset(self::$data[$this->plugin]);
     }
 
     /**

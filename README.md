@@ -6,7 +6,7 @@ An out of the box complete and centralized general purpose API system that aims 
 ### Core Features
  - [ ] Database
    - [ ] Database Object-Relational Mapping (ORM)
-   - [ ] Multi-Connection Support
+   - [x] Multi-Connection Support
  - [ ] Users
    - [ ] Authentication System
    - [ ] User Access Control
@@ -19,6 +19,13 @@ An out of the box complete and centralized general purpose API system that aims 
    - [ ] Spam Guard
    
 ### Built-in Plugins
+ - [ ] URL Shortener
+   - [ ] Custom URL Support
+   - [ ] URL Generator
+   - [ ] URL Analytics
+   - [ ] URL Expiration
+   - [ ] URL Password Protection
+   - [ ] URL Click Tracking
  - [ ] Services and Products Licensing System
  - [ ] Dev/Student Tools
    - [ ] Encryption
@@ -49,21 +56,23 @@ An out of the box complete and centralized general purpose API system that aims 
      - [ ] Manual Input Support
    - [ ] Time Tracking
    - [ ] Salary Management System
-  - [ ] Learning Management System
+ - [ ] Learning Management System
    - [ ] Forum
    - [ ] Library System
    - [ ] Attendance System
    - [ ] Permission Based Storage
    - [ ] Registrar
    - [ ] Teacher
-    - [ ] Work Load Schedule Distribution
-    - [ ] Grading System
-    - [ ] Exam System
-    - [ ] Discussion
-    - [ ] Proctor Support
-    - [ ] Syllabus
+     - [ ] Work Load Schedule Distribution
+     - [ ] Grading System
+     - [ ] Exam System
+     - [ ] Discussion
+     - [ ] Proctor Support
+     - [ ] Syllabus
    - [ ] Student
-    - [ ] Group Discussion
+     - [ ] Group Discussion
+     - [ ] Group File Sharing
+
     
  
 # Setup
@@ -79,6 +88,9 @@ Go to `https://github.com/{username}/{repository}/settings/secrets/actions` and 
 | `FTP_USERNAME` | Username for FTP Server | `admin` |
 | `FTP_SERVER` | FTP Server Address | `ftp.domain.com` |
 | `JWT_SECRET` | JWT Secret token | `My5up3r53cr3tK3Y` |
+| `DEFAULT_DB_DSN` | Default Database DSN | `mysql:host=localhost;port=3306;dbname=db` |
+| `DEFAULT_DB_USER` | Default Database Username | `root` |
+| `DEFAULT_DB_PASS` | Default Database Password | `root` |
 
 ## Required Environment Variables
 
@@ -87,6 +99,10 @@ The system will look for `.env` file in the root directory of the project. If it
 | Name | Description | Example |
 | --- | --- | --- |
 | `JWT_SECRET` | Secret token that will mainly use in Authentication | `My5up3r53cr3tK3Y` |
+| `DEFAULT_DB_DSN` | Default Database DSN | `mysql:host=localhost;port=3306;dbname=development_db` |
+| `DEFAULT_DB_USER` | Default Database Username | `root` |
+| `DEFAULT_DB_PASS` | Default Database Password | `root` |
+
 
 # LICENSE
 This project is licensed under [Apache License 2.0](LICENSE)

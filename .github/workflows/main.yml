@@ -19,6 +19,9 @@ jobs:
                 prefix: ENV_
               env:
                 ENV_JWT_SECRET: ${{ secrets.JWT_SECRET }}
+                ENV_DEFAULT_DB_DSN: ${{ secrets.DEFAULT_DB_DSN }}
+                ENV_DEFAULT_DB_USER: ${{ secrets.DEFAULT_DB_USER }}
+                ENV_DEFAULT_DB_PASS: ${{ secrets.DEFAULT_DB_PASS }}
             
             - name: Cache Composer dependencies
               uses: actions/cache@v3
@@ -30,7 +33,7 @@ jobs:
               uses: php-actions/composer@v6
               with:
                 dev: no
-                args: --profile --ignore-platform-reqs
+                args: --profile --ignore-platform-reqs -o
 
             - name: Sync files
               uses: SamKirkland/FTP-Deploy-Action@4.3.0
