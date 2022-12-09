@@ -19,6 +19,13 @@ An out of the box complete and centralized general purpose API system that aims 
    - [ ] Spam Guard
    
 ### Built-in Plugins
+ - [ ] URL Shortener
+   - [ ] Custom URL Support
+   - [ ] URL Generator
+   - [ ] URL Analytics
+   - [ ] URL Expiration
+   - [ ] URL Password Protection
+   - [ ] URL Click Tracking
  - [ ] Services and Products Licensing System
  - [ ] Dev/Student Tools
    - [ ] Encryption
@@ -49,7 +56,7 @@ An out of the box complete and centralized general purpose API system that aims 
      - [ ] Manual Input Support
    - [ ] Time Tracking
    - [ ] Salary Management System
-  - [ ] Learning Management System
+ - [ ] Learning Management System
    - [ ] Forum
    - [ ] Library System
    - [ ] Attendance System
@@ -64,6 +71,8 @@ An out of the box complete and centralized general purpose API system that aims 
      - [ ] Syllabus
    - [ ] Student
      - [ ] Group Discussion
+     - [ ] Group File Sharing
+
     
  
 # Setup
