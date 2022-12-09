@@ -3,8 +3,9 @@
 return [
     'DATABASES' => [
         'default' => [
-            'mysql:host=localhost;dbname=database',
-            'root'
+            @$_ENV['DEFAULT_DB_DSN'],
+            @$_ENV['DEFAULT_DB_USER'],
+            @$_ENV['DEFAULT_DB_PASS']
         ]
     ]
 ];

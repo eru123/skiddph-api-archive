@@ -24,7 +24,6 @@ class Bootstrapper
             if (is_file($file)) {
                 $file_info = pathinfo($file);
                 if (@$file_info["extension"] && in_array($file_info["extension"], $allowed_config_exts) && $file_info["filename"] === $allowed_config_name) {
-                    print_r($file_info);
                     $config = require_once $dir . DIRECTORY_SEPARATOR . $file;
                     foreach ($config as $key => $value) {
                         $plugin = new PluginConfig($key);

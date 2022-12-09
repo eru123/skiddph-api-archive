@@ -6,9 +6,9 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-// echo "<pre>";
+echo "<pre>";
 
 \App\Core\Bootstrapper::init(__DIR__);
 $orm = \App\Core\Database::connect('default');
-
-// echo "</pre>";
+echo "OK";
+echo "</pre>";
