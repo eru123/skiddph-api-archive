@@ -6,15 +6,9 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-use Dotenv\Dotenv;
-use App\Lib\URL;
+// echo "<pre>";
 
-Dotenv::createImmutable(__DIR__)->load();
+\App\Core\Bootstrapper::init(__DIR__);
+$orm = \App\Core\Database::connect('default');
 
-echo "<pre>";
-
-$url = new URL("https://domain.com/asdasd?a=1&b=2#sdfsd");
-echo $url->get(), PHP_EOL;
-print_r($url->extract());
-echo $url->addQuery(['a' => 4, 'b' => 5])->get();
-echo "</pre>";
+// echo "</pre>";

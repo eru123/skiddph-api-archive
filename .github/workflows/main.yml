@@ -30,7 +30,7 @@ jobs:
               uses: php-actions/composer@v6
               with:
                 dev: no
-                args: --profile --ignore-platform-reqs
+                args: --profile --ignore-platform-reqs -o
 
             - name: Sync files
               uses: SamKirkland/FTP-Deploy-Action@4.3.0
