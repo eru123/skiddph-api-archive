@@ -2,6 +2,8 @@
 
 namespace App\Core;
 
+use Dotenv\Dotenv;
+
 class Bootstrapper
 {
     public static function init(string $dir = null): void
@@ -14,7 +16,7 @@ class Bootstrapper
             $dir = realpath($dir);
         }
 
-        \Dotenv\Dotenv::createImmutable($dir)->load();
+        Dotenv::createImmutable($dir)->load();
 
         $allowed_config_exts = ["php", "json", "inc"];
         $allowed_config_name = "config";
