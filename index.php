@@ -6,9 +6,24 @@ error_reporting(E_ALL);
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-echo "<pre>";
+// echo "<pre>";
+echo "START", PHP_EOL;
 
-\App\Core\Bootstrapper::init(__DIR__);
-$orm = \App\Core\Database::connect('default');
-echo "OK";
-echo "</pre>";
+\Api\Core\Bootstrapper::init(__DIR__);
+$orm = \Api\Database\Database::connect('default');
+
+// print_r($orm->table('auth_users'));
+echo $orm->table('auth_users')
+    ->insert([
+        [
+            'user' => 'admin4',
+            'hash' => password_hash('pass', PASSWORD_BCRYPT, ['cost' => 12]),
+            'created_at' => date('Y-m-d H:i:s'),
+        ]
+    ])->rowCount(), PHP_EOL;
+
+// echo last inserted id
+echo $orm->lastInsertId(), PHP_EOL;
+
+echo PHP_EOL, "END";
+// echo "</pre>";

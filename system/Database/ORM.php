@@ -42,9 +42,9 @@ class ORM extends Helper
 
     /**
      * Create a new instance of the ORM
-     * @param PDO $pdo
+     * @param PDO &$pdo
      */
-    public function __construct(PDO $pdo)
+    public function __construct(PDO &$pdo)
     {
         $this->pdo = $pdo;
     }
@@ -409,6 +409,11 @@ class ORM extends Helper
     {
         $key = 'data';
         $data = self::escape($this->pdo, $data);
+
+        if (!isset($this->query[$key])) {
+            $this->query[$key] = [];
+        }
+
         if (self::isMultiArray($data)) {
             $this->query[$key] = array_merge($this->query[$key], $data);
         } else {
@@ -421,17 +426,21 @@ class ORM extends Helper
 
     /**
      * Insert
-     * @return PDOStatement
+     * @param array $data [optional] data to insert
+     * @return self
      */
-    public function insert(): PDOStatement
+    public function insert($data = null): self
     {
         $this->query['action'] = 'insert';
+        if (is_array($data)) {
+            $this->data($data);
+        }
         $this->sql = Parser::parse($this->query);
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
-        return $this->stmt;
+        return $this;
     }
 
     /**
@@ -619,5 +628,25 @@ class ORM extends Helper
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
         return $this->stmt->fetch(PDO::FETCH_ASSOC)['Create Index'];
+    }
+
+    /**
+     * Begin transaction
+     * @return self
+     */
+    public function begin(): self
+    {
+        $this->pdo->beginTransaction();
+        return $this;
+    }
+
+    /**
+     * Commit transaction
+     * @return self
+     */
+    public function commit(): self
+    {
+        $this->pdo->commit();
+        return $this;
     }
 }

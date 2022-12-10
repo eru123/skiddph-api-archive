@@ -139,4 +139,109 @@ class Helper
         }
         return false;
     }
+
+    /**
+     * Deserialize PDO DSN string into an array
+     * @param string $dsn PDO DSN
+     * @return array
+     */
+    public static function dsnDeserialize(string $dsn): array
+    {
+        $result = [];
+        $parts = explode(';', $dsn);
+        $adapter = null;
+        foreach ($parts as $part) {
+            $part = explode('=', $part);
+            $key = strtolower($part[0]);
+            $value = $part[1];
+
+            // check if has key has adapter 
+            $key_parts = explode(':', $key);
+            if (count($key_parts) > 1) {
+                $adapter = $key_parts[0];
+                $key = $key_parts[1];
+            }
+
+            $result[$key] = $value;
+        }
+
+        if ($adapter) {
+            $result['adapter'] = $adapter;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Deserialize PDO Args into array
+     * @param array $args PDO Args
+     * @return array
+     */
+    public static function pdoArgsDeserialize(array $args): array
+    {   
+        if (count($args) < 1) {
+            throw new Exception('Invalid PDO Args');
+        }
+
+        $result = self::dsnDeserialize($args[0]);
+
+        if (isset($args[1])) {
+            $result['user'] = $args[1];
+        }
+
+        if (isset($args[2])) {
+            $result['pass'] = $args[2];
+        }
+
+        $convert = [
+            "dbname" => "name",
+        ];
+
+        foreach ($convert as $key => $value) {
+            if (isset($result[$key])) {
+                $result[$value] = $result[$key];
+                unset($result[$key]);
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Databases Config to Phinx Config
+     * @param array $config Databases Config
+     * 
+     */
+    public static function toPhinxConfig(array $config): array
+    {
+        $phinx = [];
+        foreach ($config as $key => $value) {
+            $des = self::pdoArgsDeserialize($value);
+            $phinx[$key] = [
+                "adapter" => (string) @$des['adapter'],
+                "host" => (string) @$des['host'],
+                "name" => (string) @$des['name'],
+                "user" => (string) @$des['user'],
+                "pass" => (string) @$des['pass'],
+                "port" => (string) @$des['port'] ?? '3306',
+                "charset" => (string) @$des['charset'] ?? 'utf8',
+            ];
+        }
+
+        $default_env = ["default", "development"];
+
+        foreach ($default_env as $default) {
+            if (isset($phinx[$default])) {
+                $phinx['default_environment'] = $default;
+                break;
+            }
+        }
+
+        if(!isset($phinx['default_environment'])) {
+            $keys = array_keys($phinx);
+            $phinx['default_environment'] = $keys[0];
+        }
+
+        return $phinx;
+    }
 }
