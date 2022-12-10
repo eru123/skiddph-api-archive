@@ -8,7 +8,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 echo "<pre>";
 
-\App\Core\Bootstrapper::init(__DIR__);
-$orm = \App\Core\Database::connect('default');
+\Api\Core\Bootstrapper::init(__DIR__);
+// $orm = \Api\Core\Database::connect('default');
+
 echo "OK";
 echo "</pre>";
