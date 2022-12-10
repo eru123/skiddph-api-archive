@@ -223,8 +223,8 @@ class Helper
                 "name" => (string) @$des['name'],
                 "user" => (string) @$des['user'],
                 "pass" => (string) @$des['pass'],
-                "port" => (string) @$des['port'],
-                "charset" => (string) @$des['charset'],
+                "port" => (string) @$des['port'] ?? '3306',
+                "charset" => (string) @$des['charset'] ?? 'utf8',
             ];
         }
 
@@ -232,13 +232,14 @@ class Helper
 
         foreach ($default_env as $default) {
             if (isset($phinx[$default])) {
-                $phinx['default_environment'] = $phinx[$default];
+                $phinx['default_environment'] = $default;
                 break;
             }
         }
 
         if(!isset($phinx['default_environment'])) {
-            $phinx['default_environment'] = reset($phinx);
+            $keys = array_keys($phinx);
+            $phinx['default_environment'] = $keys[0];
         }
 
         return $phinx;
