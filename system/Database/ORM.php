@@ -42,9 +42,9 @@ class ORM extends Helper
 
     /**
      * Create a new instance of the ORM
-     * @param PDO $pdo
+     * @param PDO &$pdo
      */
-    public function __construct(PDO $pdo)
+    public function __construct(PDO &$pdo)
     {
         $this->pdo = $pdo;
     }
