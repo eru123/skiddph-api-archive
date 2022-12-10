@@ -2,12 +2,18 @@
 
 namespace Api\Database;
 
+use Api\Core\Plugin;
 use Api\Core\PluginConfig;
 use Exception;
 use PDO;
 
-class Database
+class Database extends Plugin
 {
+    static function config(): PluginConfig
+    {
+        return new PluginConfig('DATABASES');
+    }
+
     /**
      * Holds Multiple Database Connections
      * @var array
@@ -22,7 +28,7 @@ class Database
     final static function connect(string $key): ORM
     {
         if (!isset(self::$connections[$key])) {
-            $cfg = new PluginConfig('DATABASES');
+            $cfg = self::config();
             $pdo_args = $cfg->get($key);
             if ($pdo_args === null) {
                 throw new Exception("Database connection not found: $key");
@@ -43,5 +49,15 @@ class Database
         if (isset(self::$connections[$key])) {
             unset(self::$connections[$key]);
         }
+    }
+
+    /**
+     * Generate Phinx Environment Configs
+     * @return array
+     */
+    final static function phinxConfig(): array
+    {
+        $cfg = self::config()->all();
+        return Helper::toPhinxConfig($cfg);
     }
 }
