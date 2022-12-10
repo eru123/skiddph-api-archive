@@ -1,8 +1,8 @@
 <?php
 
-namespace Api\Core;
+namespace Api\Database;
 
-use Api\Database\ORM;
+use Api\Core\PluginConfig;
 use Exception;
 use PDO;
 
