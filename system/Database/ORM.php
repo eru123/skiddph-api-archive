@@ -651,6 +651,16 @@ class ORM extends Helper
     }
 
     /**
+     * Rollback transaction
+     * @return self
+     */
+    public function rollback(): self
+    {
+        $this->pdo->rollBack();
+        return $this;
+    }
+
+    /**
      * Inject Class
      * @param string $query
      * @param mixed ...$params
