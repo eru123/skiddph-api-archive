@@ -2,15 +2,19 @@
 
 namespace Api\Database;
 
+use Exception;
+
 class Parser
 {
     final public static function parse(array $query): string
-    {   
-        // echo "QUERY: ", print_r($query, true), PHP_EOL;
+    {
         $action = @$query['action'];
         $action = "action_" . strtolower($action);
-        $sql = @self::{$action}($query);
-        // echo "SQL: ", $sql, PHP_EOL;
+        try {
+            $sql = @self::{$action}($query);
+        } catch (Exception $e) {
+            throw new Exception("Invalid query action: $action");
+        }
         return $sql;
     }
 
