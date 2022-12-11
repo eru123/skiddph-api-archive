@@ -8,6 +8,7 @@ class Parser
 {
     final public static function parse(array $query): string
     {
+        echo "QUERY: ", print_r($query, true), PHP_EOL;
         $action = @$query['action'];
         $action = "action_" . strtolower($action);
         try {
@@ -15,6 +16,7 @@ class Parser
         } catch (Exception $e) {
             throw new Exception("Invalid query action: $action");
         }
+        echo "SQL: ", $sql, PHP_EOL;
         return $sql;
     }
 
