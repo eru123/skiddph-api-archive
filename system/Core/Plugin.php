@@ -9,4 +9,11 @@ abstract class Plugin
      * @return PluginConfig
      */
     abstract static function config(): PluginConfig;
+
+    /**
+     * Set and Get the plugin key
+     * @param   string|null $key The plugin key
+     * @return  string The plugin key
+     */
+    abstract static function key(string $key = null): string;
 }
