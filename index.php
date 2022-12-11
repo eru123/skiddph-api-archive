@@ -16,9 +16,9 @@ $orm = \Api\Database\Database::connect('default');
 echo $orm->table('auth_users')
     ->insert([
         [
-            'user' => 'admin4',
+            'user' => 'admin1',
             'hash' => password_hash('pass', PASSWORD_BCRYPT, ['cost' => 12]),
-            'created_at' => date('Y-m-d H:i:s'),
+            'created_at' => $orm->f("NOW()"),
         ]
     ])->rowCount(), PHP_EOL;
 
