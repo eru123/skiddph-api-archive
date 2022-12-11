@@ -649,4 +649,15 @@ class ORM extends Helper
         $this->pdo->commit();
         return $this;
     }
+
+    /**
+     * Inject Class
+     * @param string $query
+     * @param mixed ...$params
+     * @return Inject
+     */
+    public function f(string $query, ...$params): Inject
+    {
+        return new Inject($this->pdo, $query, ...$params);
+    }
 }
