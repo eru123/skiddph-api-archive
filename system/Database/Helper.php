@@ -118,8 +118,10 @@ class Helper
             foreach ($value as $key => $val) {
                 $value[$key] = self::escape($pdo, $val);
             }
+        } else if (is_object($value) && method_exists($value, 'query')) {
+            return $value->query();
         }
-        
+
         return $value;
     }
 
@@ -130,9 +132,9 @@ class Helper
      */
     public static function isMultiArray(mixed $data): bool
     {
-        if(is_array($data)) {
-            foreach($data as $value) {
-                if(is_array($value)) {
+        if (is_array($data)) {
+            foreach ($data as $value) {
+                if (is_array($value)) {
                     return true;
                 }
             }
@@ -178,7 +180,7 @@ class Helper
      * @return array
      */
     public static function pdoArgsDeserialize(array $args): array
-    {   
+    {
         if (count($args) < 1) {
             throw new Exception('Invalid PDO Args');
         }
@@ -237,7 +239,7 @@ class Helper
             }
         }
 
-        if(!isset($phinx['default_environment'])) {
+        if (!isset($phinx['default_environment'])) {
             $keys = array_keys($phinx);
             $phinx['default_environment'] = $keys[0];
         }
