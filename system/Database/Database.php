@@ -2,16 +2,29 @@
 
 namespace Api\Database;
 
-use Api\Core\Plugin;
-use Api\Core\PluginConfig;
+use Api\Core\{
+    Plugin,
+    PluginConfig
+};
 use Exception;
 use PDO;
 
 class Database extends Plugin
 {
+    private static $key = "DATABASES";
+
+    static function key(string $key = null): string
+    {
+        if (is_string($key) && !empty($key)) {
+            self::$key = $key;
+        }
+
+        return self::$key;
+    }
+
     static function config(): PluginConfig
     {
-        return new PluginConfig('DATABASES');
+        return new PluginConfig(self::$key);
     }
 
     /**

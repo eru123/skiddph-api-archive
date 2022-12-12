@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 use Phinx\Migration\AbstractMigration;
@@ -18,10 +19,10 @@ final class AuthUsers extends AbstractMigration
      */
     public function change()
     {
-        $table = $this->table('auth_users');
-        $table->addColumn('user', 'string', ['limit' => 255])
-            ->addColumn('hash', 'string', ['limit' => 255])
-            ->addColumn('created_at', 'datetime')
+        $table = $this->table('auth_users', ['id' => false, 'primary_key' => ['user']]);
+        $table->addColumn('user', 'string', ['limit' => 255, 'null' => false])
+            ->addColumn('hash', 'string', ['limit' => 255, 'null' => false])
+            ->addColumn('created_at', 'datetime', ['null' => true])
             ->addColumn('updated_at', 'datetime', ['null' => true])
             ->addColumn('deleted_at', 'datetime', ['null' => true])
             ->addColumn('deactivated_at', 'datetime', ['null' => true])
