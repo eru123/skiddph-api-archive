@@ -19,7 +19,7 @@ final class AuthUsers extends AbstractMigration
      */
     public function change()
     {
-        $table = $this->table('auth_users', ['id' => false, 'primary_key' => ['user']]);
+        $table = $this->table('auth_users');
         $table->addColumn('user', 'string', ['limit' => 255, 'null' => false])
             ->addColumn('hash', 'string', ['limit' => 255, 'null' => false])
             ->addColumn('created_at', 'datetime', ['null' => true])
