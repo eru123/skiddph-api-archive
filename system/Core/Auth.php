@@ -1,12 +1,6 @@
 <?php
 
-use Plugin;
-use PluginConfig;
-use Database;
-
-use Api\Database\{
-    ORM
-};
+use Api\Database\ORM;
 
 use Api\Auth\{
     JWT,
