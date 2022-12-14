@@ -125,6 +125,17 @@ class JWT
             throw new Exception('Algorithm not supported', 400);
         }
 
+        $tmc_keys = ['iat', 'nbf', 'exp', 'jti'];
+        foreach ($tmc_keys as $tk) {
+            if (isset($payload[$tk]) && !is_numeric($payload[$tk]) && is_string($payload[$tk])) {
+                $payload[$tk] = Date::parse($payload[$tk], "s", Date::UNIT);
+            }
+
+            if (isset($payload[$tk]) && !is_numeric($payload[$tk])) {
+                throw new Exception("Invalid value for $tk", 400);
+            }
+        }
+
         $header = ['typ' => 'JWT', 'alg' => $alg];
         $segments = [];
         $segments[] = self::urlsafeB64Encode((string) self::jsonEncode($header));
