@@ -12,24 +12,15 @@ use InvalidArgumentException;
 use UnexpectedValueException;
 use Exception;
 use Error;
-
-use Api\Lib\Date;
 use Auth;
-use Config;
 
 class JWT
 {
-    public static function encode(array $payload, $exp = 0): string
+    public static function encode(array $payload): string
     {
         $cfg = Auth::config();
-        $time = Date::now();
         $key = $cfg->get('JWT_KEY');
         $alg = $cfg->get('JWT_ALG', 'HS256');
-        $payload['iat'] = $time;
-        $exp_t = is_string($exp) && !empty(trim($exp)) ? Date::parse($exp, "s", Date::UNIT) : ((int) $exp > 0 ? (int) $exp : false);
-        if ($exp_t) {
-            $payload['exp'] = $time + $exp_t;
-        }
         return fJWT::encode($payload, $key, $alg);
     }
 
