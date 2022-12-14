@@ -3,12 +3,35 @@
 namespace Api\Lib;
 
 use Exception;
+use Config;
 
 class Date
 {
     const UNIT = 0;
     const FORMAT = 1;
 
+    /**
+     * @var int $global_time static time value for time sensitive functions and simulations
+     */
+    private static $global_time = time();
+
+    /**
+     * Set global time
+     * @param int $time
+     */
+    public static function setTime($time)
+    {
+        self::$global_time = $time;
+    }
+
+    /**
+     * Get global time
+     * @return int
+     */
+    public static function now()
+    {
+        return self::$global_time;
+    }
 
     /**
      * translate unit name to unit keyword
@@ -38,7 +61,6 @@ class Date
 
         return false;
     }
-
 
     /**
      * Translate time to given unit
