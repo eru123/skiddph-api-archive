@@ -3,7 +3,6 @@
 namespace Api\Lib;
 
 use Exception;
-use Config;
 
 class Date
 {
