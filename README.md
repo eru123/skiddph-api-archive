@@ -1,6 +1,8 @@
 # API
 An out of the box complete and centralized general purpose API system that aims to power you web development journey.
 
+> **Warning!!** This project is in experimental and active development, structure and features may change at any time.
+
 # Planned Features
 **NOTE:** The planned feaures are still not final, anyone can add or request a feature via [ISSUES](https://github.com/eru123/api/issues)
 ### Core Features
