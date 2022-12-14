@@ -9,6 +9,37 @@ class Date
     const UNIT = 0;
     const FORMAT = 1;
 
+
+    /**
+     * translate unit name to unit keyword
+     * @param string $unit Unit name
+     * @return string|bool Returns unit keyword or false if unit name is invalid
+     */
+    public static function unit($unit)
+    {
+        $rgx_unit = [
+            'ms' => '/^(\s+)?(ms|mils?|milliseconds?)?(\s+)?$/',
+            's' => '/^(\s+)?(s|secs?|seconds?|timestamps?|ts)(\s+)?$/',
+            'm' => '/^(\s+)?(m(in)?|mins?|minutes?)(\s+)?$/',
+            'h' => '/^(\s+)?(h|hrs?|hours?)(\s+)?$/',
+            'd' => '/^(\s+)?(d|days?)(\s+)?$/',
+            'w' => '/^(\s+)?(w|weeks?)(\s+)?$/',
+            'M' => '/^(\s+)?(M|months?)(\s+)?$/',
+            'y' => '/^(\s+)?(y|years?)(\s+)?$/',
+            'ly' => '/^(\s+)?(ly?|leaps?|leaps?\s?years?)(\s+)?$/',
+        ];
+
+        $unit = is_string($unit) && !empty(trim($unit)) ? trim($unit) : false;
+        if ($unit) foreach ($rgx_unit as $key => $rgx) {
+            if (preg_match($rgx, $unit)) {
+                return $key;
+            }
+        }
+
+        return false;
+    }
+
+
     /**
      * Translate time to given unit
      * @param string $query Time to translate
@@ -17,9 +48,11 @@ class Date
      */
     public static function translate($query, $out = "ms")
     {
+        $out = self::unit($out);
+
         $rgx_time = [
             'ms' => '/^(\s+)?(\d+)(\s+)?(ms|mils?|milliseconds?)?(\s+)?$/',
-            's' => '/^(\s+)?(\d+)(\s+)?(s|secs?|seconds?)(\s+)?$/',
+            's' => '/^(\s+)?(\d+)(\s+)?(s|secs?|seconds?|timestamps?|ts)(\s+)?$/',
             'm' => '/^(\s+)?(\d+)(\s+)?(m(in)?|mins?|minutes?)(\s+)?$/',
             'h' => '/^(\s+)?(\d+)(\s+)?(h|hrs?|hours?)(\s+)?$/',
             'd' => '/^(\s+)?(\d+)(\s+)?(d|days?)(\s+)?$/',
@@ -66,7 +99,7 @@ class Date
             }
         }
 
-        return self::ms_to($time, $out);
+        return self::ms_to($time, $out, self::UNIT);
     }
 
     /**
@@ -78,6 +111,9 @@ class Date
      */
     public static function ms_to($ms, $out = "ms", $type = self::UNIT)
     {
+        $f_out = self::unit($out);
+        $out = $type === self::UNIT ? ($f_out ? $f_out : $out) : $out;
+
         $ms = floatval($ms);
         $opts = [
             'ms' => 1,
@@ -91,7 +127,7 @@ class Date
             'ly' => 31622400000,
         ];
 
-        if (isset($opts[$out]) && $type == self::UNIT) {
+        if (isset($opts[$out]) && $type === self::UNIT) {
             return $ms / $opts[$out];
         } else if ($out == "datetime") {
             return date("Y-m-d H:i:s", $ms / 1000);
@@ -99,9 +135,7 @@ class Date
             return date("Y-m-d", $ms / 1000);
         } else if ($out == "time") {
             return date("H:i:s", $ms / 1000);
-        } else if ($out == "timestamp" || $out == "ts") {
-            return $ms / 1000;
-        } else if ($type == self::UNIT) {
+        } else if ($type === self::UNIT) {
             throw new Exception("Invalid output unit");
         }
 
@@ -122,73 +156,77 @@ class Date
     {
         $now = time();
 
-        $rgx_tr_time = '/(\d+)(\s+)?([a-zM]+)(\s+)?/';
-        $rgx_datetime = '/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})/';
-        $rgx_datetime_ns = '/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2})/';
-        $rgx_datetime_nm = '/(\d{4})-(\d{2})-(\d{2})\s(\d{2})/';
-        $rgx_date = '/(\d{4})-(\d{2})-(\d{2})/';
-        $rgx_month = '/(\d{4})-(\d{2})/';
-        $rgx_time = '/(\d{2}):(\d{2}):(\d{2})/';
-        $rgx_time_ns = '/(\d{2}):(\d{2})/';
-        // $rgx_year = '/(\d{4})/';
-        $rgx_now = '/(now|time)/';
+        $rgx_parser = [
+            'tr_time' => [
+                'rgx' => '/(\d+)(\s+)?([a-zM]+)(\s+)?/',
+                'cb' => function ($matches) {
+                    return self::translate($matches[0], 's');
+                },
+            ],
+            'datetime' => [
+                'rgx' => '/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})/',
+                'cb' => function ($matches) {
+                    return strtotime($matches[0]);
+                },
+            ],
+            'datetime_ns' => [
+                'rgx' => '/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2})/',
+                'cb' => function ($matches) {
+                    return strtotime($matches[0] . ':00');
+                },
+            ],
+            'datetime_nm' => [
+                'rgx' => '/(\d{4})-(\d{2})-(\d{2})\s(\d{2})/',
+                'cb' => function ($matches) {
+                    return strtotime($matches[0] . ':00:00');
+                },
+            ],
+            'date' => [
+                'rgx' => '/(\d{4})-(\d{2})-(\d{2})/',
+                'cb' => function ($matches) {
+                    return strtotime($matches[0] . ' 00:00:00');
+                },
+            ],
+            'month' => [
+                'rgx' => '/(\d{4})-(\d{2})/',
+                'cb' => function ($matches) {
+                    return strtotime($matches[0] . '-01 00:00:00');
+                },
+            ],
+            'time' => [
+                'rgx' => '/(\d{2}):(\d{2}):(\d{2})/',
+                'cb' => function ($matches) {
+                    $nd = date('Y-m-d') . ' ' . $matches[0];
+                    return strtotime($nd);
+                },
+            ],
+            'time_ns' => [
+                'rgx' => '/(\d{2}):(\d{2})/',
+                'cb' => function ($matches) {
+                    $nd = date('Y-m-d') . ' ' . $matches[0] . ':00';
+                    return strtotime($nd);
+                },
+            ],
+            'now' => [
+                'rgx' => '/(now|time)/',
+                'cb' => function () use ($now) {
+                    return $now;
+                },
+            ],
+        ];
 
-        // replace datetime
-        $query = preg_replace_callback($rgx_datetime, function ($matches) {
-            return strtotime($matches[0]);
-        }, $query);
+        foreach ($rgx_parser as $rgx) {
+            $query = preg_replace_callback($rgx['rgx'], $rgx['cb'], $query);
+        }
 
-        // replace datetime_ns with no seconds
-        $query = preg_replace_callback($rgx_datetime_ns, function ($matches) {
-            return strtotime($matches[0] . ':00');
-        }, $query);
-
-        // replace datetime_nm with no seconds and minutes
-        $query = preg_replace_callback($rgx_datetime_nm, function ($matches) {
-            return strtotime($matches[0] . ':00:00');
-        }, $query);
-
-        // replace date
-        $query = preg_replace_callback($rgx_date, function ($matches) {
-            return strtotime($matches[0] . ' 00:00:00');
-        }, $query);
-
-        // replace date with no day
-        $query = preg_replace_callback($rgx_month, function ($matches) {
-            return strtotime($matches[0] . '-01 00:00:00');
-        }, $query);
-
-        // replace year
-        // $query = preg_replace_callback($rgx_year, function ($matches) {
-        //     return strtotime($matches[0] . '-01-01 00:00:00');
-        // }, $query);
-
-        // replace time
-        $query = preg_replace_callback($rgx_time, function ($matches) {
-            $nd = date('Y-m-d') . ' ' . $matches[0];
-            return strtotime($nd);
-        }, $query);
-
-        // replace time_ns with no seconds
-        $query = preg_replace_callback($rgx_time_ns, function ($matches) {
-            $nd = date('Y-m-d') . ' ' . $matches[0] . ':00';
-            return strtotime($nd);
-        }, $query);
-
-        // replace now
-        $query = preg_replace_callback($rgx_now, function () use ($now) {
-            return $now;
-        }, $query);
-
-        // replace tr_time with seconds
-        $query = preg_replace_callback($rgx_tr_time, function ($matches) {
-            return self::translate($matches[0], 's');
-        }, $query);
+        // check if safe to eval
+        if (!preg_match('/^[\d\s\+\-\*\/\%\(\)]+$/', $query)) {
+            throw new Exception('Invalid query');
+        }
 
         // echo "QUERY: $query", PHP_EOL;
-
         $ts = eval('return ' . $query . ';') * 1000;
-        
+
         return self::ms_to($ts, $out, $type);
     }
 }
