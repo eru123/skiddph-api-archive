@@ -14,7 +14,12 @@ use Api\Auth\JWT;
 echo "START", PHP_EOL;
 $cfg = Auth::config();
 // echo print_r($cfg->all(), true), PHP_EOL;
-$token = JWT::encode(['user_id' => 1]);
+$token = JWT::encode([
+    'user_id' => 1,
+    'iat' => "now",
+    'exp' => "now + 1 day",
+    'nbf' => "now + 1 hour",
+]);
 echo $token, PHP_EOL;
 echo print_r(JWT::decode($token), true), PHP_EOL;
 // echo Date::parse("1day ago", "date"), PHP_EOL;
