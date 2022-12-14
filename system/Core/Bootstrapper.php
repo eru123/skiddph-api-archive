@@ -34,7 +34,6 @@ class Bootstrapper
 
         if (is_file($cfg_file)) {
             $config = require $cfg_file;
-            echo print_r($config, true), PHP_EOL;
             foreach ($config as $key => $value) {
                 $plugin = new PluginConfig($key);
                 foreach ($value as $k => $v) {
