@@ -1,13 +1,14 @@
 <?php
 
-namespace Api\Database;
-
-use Api\Core\{
-    Plugin,
-    PluginConfig
-};
 use Exception;
 use PDO;
+use Plugin;
+use PluginConfig;
+
+use Api\Database\{
+    ORM,
+    Helper
+};
 
 class Database extends Plugin
 {

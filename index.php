@@ -11,8 +11,8 @@ use Api\Lib\Date;
 // echo "<pre>";
 echo "START", PHP_EOL;
 
-// \Api\Core\Bootstrapper::init(__DIR__);
-// $orm = \Api\Database\Database::connect('default');
+// Bootstrapper::init(__DIR__);
+// $orm = Database::connect('default');
 
 // // print_r($orm->table('auth_users'));
 // echo $orm->table('auth_users')
@@ -36,9 +36,9 @@ echo Date::parse("now", "datetime"), PHP_EOL;
 echo Date::parse("time", "date"), PHP_EOL;
 echo Date::parse("now", "time"), PHP_EOL;
 echo Date::parse("now", "timestamp"), PHP_EOL;
-echo Date::parse("now", "h:i:s A", Date::FORMAT), PHP_EOL;
-echo Date::parse("now + 1h", "h:i:s A", Date::FORMAT), PHP_EOL;
-echo Date::parse("2000-01-01 00:00:00 + 1d - 1s", "Y-m-d H:i:s", Date::FORMAT), PHP_EOL;
+// echo Date::parse("now", "h:i:s A", Date::FORMAT), PHP_EOL;
+// echo Date::parse("now + 1h", "h:i:s A", Date::FORMAT), PHP_EOL;
+// echo Date::parse("2000-01-01 00:00:00 + 1d - 1s", "Y-m-d H:i:s", Date::FORMAT), PHP_EOL;
 
 echo PHP_EOL, "END", PHP_EOL;
 // echo "</pre>";

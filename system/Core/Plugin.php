@@ -1,7 +1,5 @@
 <?php
 
-namespace Api\Core;
-
 abstract class Plugin
 {
     /**
@@ -12,8 +10,8 @@ abstract class Plugin
 
     /**
      * Set and Get the plugin key
-     * @param   string|null $key The plugin key
-     * @return  string The plugin key
+     * @param string|null $key If set, the plugin key will be set to this value, else the current plugin key will be returned.
+     * @return string The plugin key
      */
     abstract static function key(string $key = null): string;
 }

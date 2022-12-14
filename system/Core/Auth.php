@@ -1,13 +1,10 @@
 <?php
 
-namespace Api\Authentication;
+use Plugin;
+use PluginConfig;
+use Database;
 
-use Api\Core\{
-    Plugin,
-    PluginConfig
-};
 use Api\Database\{
-    Database,
     ORM
 };
 

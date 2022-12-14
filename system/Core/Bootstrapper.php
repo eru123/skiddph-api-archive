@@ -1,7 +1,5 @@
 <?php
 
-namespace Api\Core;
-
 use Dotenv\Dotenv;
 
 class Bootstrapper
