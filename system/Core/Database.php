@@ -2,7 +2,6 @@
 
 use Exception;
 use PDO;
-use Plugin;
 use PluginConfig;
 
 use Api\Database\{
@@ -10,7 +9,7 @@ use Api\Database\{
     Helper
 };
 
-class Database extends Plugin
+class Database implements PluginKey
 {
     private static $key = "DATABASES";
 

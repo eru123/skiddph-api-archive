@@ -8,7 +8,12 @@ use Api\Database\{
     ORM
 };
 
-class Auth extends Plugin
+use Api\Auth\{
+    JWT,
+    Password
+};
+
+class Auth implements PluginDB, PluginKey
 {
     private static $key = "AUTHENTICATION";
 
@@ -26,10 +31,6 @@ class Auth extends Plugin
         return new PluginConfig(self::$key);
     }
 
-    /**
-     * Returns the database ORM instance
-     * @return ORM
-     */
     final static function db(): ORM
     {
         $cfg = self::config();
