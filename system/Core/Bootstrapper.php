@@ -14,8 +14,7 @@ class Bootstrapper
         if (is_dir($cwd)) $cwd = realpath($cwd);
         else return;
 
-        Dotenv::createImmutable($cwd);
-        
+        Dotenv::createImmutable($cwd)->load();
         $files = scandir($cwd, SCANDIR_SORT_ASCENDING);
         foreach ($files as $file) {
             if (is_file($file)) {
@@ -35,6 +34,7 @@ class Bootstrapper
 
         if (is_file($cfg_file)) {
             $config = require $cfg_file;
+            echo print_r($config, true), PHP_EOL;
             foreach ($config as $key => $value) {
                 $plugin = new PluginConfig($key);
                 foreach ($value as $k => $v) {
