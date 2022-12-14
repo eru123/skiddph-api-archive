@@ -32,6 +32,14 @@ class JWT
         $key = $cfg->get(self::$cfg_key_secret);
         $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
 
+        if (empty($key)) {
+            throw new Exception('Invalid secret key', 400);
+        }
+
+        if (empty(self::$algs[$alg])) {
+            throw new Exception('Algorithm not supported', 400);
+        }
+
         $timestamp = is_null(self::$timestamp) ? Date::now() : self::$timestamp;
 
         if (empty($key)) {
@@ -108,7 +116,15 @@ class JWT
         $cfg = Auth::config();
         $key = $cfg->get(self::$cfg_key_secret);
         $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
-        
+
+        if (empty($key)) {
+            throw new Exception('Invalid secret key', 400);
+        }
+
+        if (empty(self::$algs[$alg])) {
+            throw new Exception('Algorithm not supported', 400);
+        }
+
         $header = ['typ' => 'JWT', 'alg' => $alg];
         $segments = [];
         $segments[] = self::urlsafeB64Encode((string) self::jsonEncode($header));
@@ -135,6 +151,10 @@ class JWT
         $cfg = Auth::config();
         $key = $cfg->get(self::$cfg_key_secret);
         $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
+
+        if (empty($key)) {
+            throw new Exception('Invalid secret key', 400);
+        }
 
         if (empty(self::$algs[$alg])) {
             throw new Exception('Algorithm not supported');
