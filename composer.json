@@ -7,6 +7,9 @@
     "autoload": {
         "psr-4": {
             "Api\\": "system/"
-        }
+        },
+        "classmap": [
+            "system/Core"
+        ]
     }
 }
