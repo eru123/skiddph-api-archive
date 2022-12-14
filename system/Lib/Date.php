@@ -13,15 +13,15 @@ class Date
     /**
      * @var int $global_time static time value for time sensitive functions and simulations
      */
-    private static $global_time = time();
+    private static $global_time;
 
     /**
      * Set global time
      * @param int $time
      */
-    public static function setTime($time)
+    public static function setTime($time = null)
     {
-        self::$global_time = $time;
+        self::$global_time = $time ?? time();
     }
 
     /**
@@ -30,6 +30,9 @@ class Date
      */
     public static function now()
     {
+        if (is_null(self::$global_time)) {
+            self::setTime();
+        }
         return self::$global_time;
     }
 
@@ -176,7 +179,7 @@ class Date
      */
     public static function parse(string $query, $out = "ms", $type = self::UNIT)
     {
-        $now = time();
+        $now = self::now();
 
         $rgx_parser = [
             'tr_time' => [
@@ -235,6 +238,42 @@ class Date
                     return $now;
                 },
             ],
+            'today' => [
+                'rgx' => '/(today|date)/',
+                'cb' => function () use ($now) {
+                    return strtotime(date('Y-m-d', $now));
+                },
+            ],
+            'yesterday' => [
+                'rgx' => '/yesterday/',
+                'cb' => function () use ($now) {
+                    return strtotime(date('Y-m-d', $now)) - 86400000;
+                },
+            ],
+            'tomorrow' => [
+                'rgx' => '/(tomorrow|tom)/',
+                'cb' => function () use ($now) {
+                    return strtotime(date('Y-m-d', $now)) + 86400000;
+                },
+            ],
+            'after' => [
+                'rgx' => '/after/',
+                'cb' => function ($matches) {
+                    return ' + ';
+                },
+            ],
+            'before' => [
+                'rgx' => '/before/',
+                'cb' => function ($matches) {
+                    return ' - ';
+                },
+            ],
+            'ago' => [
+                'rgx' => '/(\d+)(\s+)?ago/',
+                'cb' => function ($matches) use ($now) {
+                    return $now - $matches[1];
+                },
+            ],
         ];
 
         foreach ($rgx_parser as $rgx) {
@@ -246,7 +285,6 @@ class Date
             throw new Exception('Invalid query');
         }
 
-        // echo "QUERY: $query", PHP_EOL;
         $ts = eval('return ' . $query . ';') * 1000;
 
         return self::ms_to($ts, $out, $type);
