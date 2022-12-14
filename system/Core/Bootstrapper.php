@@ -13,7 +13,9 @@ class Bootstrapper
         if ($cwd === null) $cwd = getcwd();
         if (is_dir($cwd)) $cwd = realpath($cwd);
         else return;
-        Dotenv::createImmutable($cwd)->load();
+
+        Dotenv::createImmutable($cwd);
+        
         $files = scandir($cwd, SCANDIR_SORT_ASCENDING);
         foreach ($files as $file) {
             if (is_file($file)) {
