@@ -176,7 +176,7 @@ class Date
      * @param string $out Unit or format to translate to
      * @return float|int|string time in $out
      */
-    public static function parse(string $query, $out = "ms", $type = self::UNIT)
+    public static function parse(string $query, $out = "s", $type = self::UNIT)
     {
         $now = self::now();
 
