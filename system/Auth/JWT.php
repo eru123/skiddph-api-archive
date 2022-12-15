@@ -201,7 +201,7 @@ class JWT
             throw new Exception('Null result with non-null input');
         }
         if ($json === false) {
-            throw new Exception('Provided object could not be encoded to valid JSON');
+            throw new Exception('Failed to encode JSON');
         }
         return $json;
     }
