@@ -1,9 +1,5 @@
 <?php
 
-use Exception;
-use PDO;
-use PluginConfig;
-
 use Api\Database\{
     ORM,
     Helper
