@@ -59,6 +59,7 @@ class Helper
         $conds = [
             'eq' => '=',
             '=' => '=',
+            'is' => '=',
             'neq' => '!=',
             '!=' => '!=',
             'gt' => '>',
@@ -86,7 +87,7 @@ class Helper
 
         foreach ($condition as $key => $value) {
             if (is_numeric($key)) {
-                $result[] = self::condition($column, $value);
+                $result[] = is_string($value) ? $value : self::condition($column, $value);
             } else if (isset($conds[$key])) {
                 $result[] = "$column {$conds[$key]} $value";
             } else if (is_string($key)) {
@@ -96,7 +97,7 @@ class Helper
             }
         }
 
-        return implode(" $operator ", $result);
+        return "(" . implode(" $operator ", $result) . ")";
     }
 
     /**
