@@ -1,51 +1,18 @@
 <?php
 
-namespace Api\Authentication;
+namespace Api\Auth;
 
-use Api\Core\{
-    Plugin,
-    PluginConfig
-};
-use Api\Database\{
-    Database,
-    ORM
-};
+use Auth;
 
-class Auth extends Plugin
+class Password
 {
-    private static $key = "AUTHENTICATION";
-
-    static function key(string $key = null): string
-    {
-        if (is_string($key) && !empty($key)) {
-            self::$key = $key;
-        }
-
-        return self::$key;
-    }
-
-    static function config(): PluginConfig
-    {
-        return new PluginConfig(self::$key);
-    }
-
-    /**
-     * Returns the database ORM instance
-     * @return ORM
-     */
-    final static function db(): ORM
-    {
-        $cfg = self::config();
-        return Database::connect($cfg->get('DB_ENV'));
-    }
-
     /**
      * Get Password hash method
      * @return array
      */
     final static function getHashMethod(): array
     {
-        $cfg = self::config();
+        $cfg = Auth::config();
         $default_opts = [PASSWORD_BCRYPT, ['cost' => 12]];
         return $cfg->has('HASH_METHOD') ? $cfg->get('HASH_METHOD') : $default_opts;
     }
@@ -61,7 +28,7 @@ class Auth extends Plugin
     }
 
     /**
-     * Verify a password hash.
+     * Verify a password against a hash.
      * @param   string  $password   The password to verify.
      * @param   string  $hash       The hash to verify against.
      * @return  bool

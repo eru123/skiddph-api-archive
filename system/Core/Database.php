@@ -1,15 +1,11 @@
 <?php
 
-namespace Api\Database;
-
-use Api\Core\{
-    Plugin,
-    PluginConfig
+use Api\Database\{
+    ORM,
+    Helper
 };
-use Exception;
-use PDO;
 
-class Database extends Plugin
+class Database implements PluginKey
 {
     private static $key = "DATABASES";
 

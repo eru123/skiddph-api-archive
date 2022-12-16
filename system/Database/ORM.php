@@ -4,6 +4,8 @@ namespace Api\Database;
 
 use PDO;
 use PDOStatement;
+use Exception;
+use Api\Lib\Arr;
 
 /**
  * Database Object-Relational Mapper
@@ -39,6 +41,12 @@ class ORM extends Helper
      * @var string
      */
     private $lastQueryKey = '';
+
+    /**
+     * Table info
+     * @var array
+     */
+    private static $table;
 
     /**
      * Create a new instance of the ORM
@@ -431,6 +439,7 @@ class ORM extends Helper
      */
     public function insert($data = null): self
     {
+        $this->filterInsertData();
         $this->query['action'] = 'insert';
         if (is_array($data)) {
             $this->data($data);
@@ -449,6 +458,7 @@ class ORM extends Helper
      */
     public function update(): PDOStatement
     {
+        $this->filterInsertData();
         $this->query['action'] = 'update';
         $this->sql = Parser::parse($this->query);
         $this->query = [];
@@ -456,6 +466,16 @@ class ORM extends Helper
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
         return $this->stmt;
+    }
+
+    /**
+     * Quote and escape data
+     * @param string $data
+     * @return string
+     */
+    public function quote(string $data): string
+    {
+        return $this->pdo->quote($data);
     }
 
     /**
@@ -504,28 +524,33 @@ class ORM extends Helper
      * Read one
      * @return array
      */
-    public function readOne(): array
-    {
+    public function readOne(): Arr
+    {   
+        $this->query['action'] = 'select';
         $this->sql = Parser::parse($this->query);
+        echo $this->sql, PHP_EOL;
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
-        return $this->stmt->fetch(PDO::FETCH_ASSOC);
+        $res = $this->stmt->fetch(PDO::FETCH_ASSOC);
+        return Arr::from($res);
     }
 
     /**
      * Read many
      * @return array
      */
-    public function readMany(): array
+    public function readMany(): Arr
     {
+        $this->query['action'] = 'select';
         $this->sql = Parser::parse($this->query);
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        return Arr::from($res);
     }
 
     /**
@@ -550,15 +575,30 @@ class ORM extends Helper
      */
     public function columns(): array
     {
+        if (!isset($this->query['table'])) {
+            throw new Exception('Table not set');
+        }
+
         $driver = $this->pdo->getAttribute(PDO::ATTR_DRIVER_NAME);
         $table = explode(' ', $this->query['table'])[0];
+        if (strpos($table, '.') !== false) {
+            $table = explode('.', $table)[1];
+        }
+
+        if (!empty(self::$table[$table]['columns'])) {
+            return self::$table[$table]['columns'];
+        }
+
+        self::$table[$table]['columns'] = [];
+
         $this->sql = "SHOW COLUMNS FROM $table";
         if ($driver == 'pgsql') {
             $this->sql = "SELECT column_name FROM information_schema.columns WHERE table_name = '$table'";
         }
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_COLUMN);
+        self::$table[$table]['columns'] = $this->stmt->fetchAll(PDO::FETCH_COLUMN);
+        return self::$table[$table]['columns'];
     }
 
     /**
@@ -657,6 +697,17 @@ class ORM extends Helper
     public function rollback(): self
     {
         $this->pdo->rollBack();
+        return $this;
+    }
+
+    public function filterInsertData(): self
+    {
+        $columns = $this->columns();
+        $data = [];
+        foreach ($this->query['data'] as $d) {
+            $data[] = array_intersect_key($d, array_flip($columns));
+        }
+        $this->query['data'] = $data;
         return $this;
     }
 

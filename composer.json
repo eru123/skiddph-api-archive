@@ -1,12 +1,14 @@
 {
     "require": {
-        "firebase/php-jwt": "^6.3",
         "vlucas/phpdotenv": "^5.5",
         "robmorgan/phinx": "^0.13.3"
     },
     "autoload": {
         "psr-4": {
             "Api\\": "system/"
-        }
+        },
+        "classmap": [
+            "system/Core"
+        ]
     }
 }

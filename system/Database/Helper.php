@@ -59,6 +59,7 @@ class Helper
         $conds = [
             'eq' => '=',
             '=' => '=',
+            'is' => '=',
             'neq' => '!=',
             '!=' => '!=',
             'gt' => '>',
@@ -96,7 +97,7 @@ class Helper
             }
         }
 
-        return implode(" $operator ", $result);
+        return "(" . implode(" $operator ", $result) . ")";
     }
 
     /**

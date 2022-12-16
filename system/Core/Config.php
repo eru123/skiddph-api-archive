@@ -1,7 +1,5 @@
 <?php
 
-namespace Api\Core;
-
 class Config
 {
     /**

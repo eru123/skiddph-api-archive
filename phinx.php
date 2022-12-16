@@ -2,9 +2,6 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
-use Api\Database\Database;
-use Api\Core\Bootstrapper;
-
 Bootstrapper::init(__DIR__);
 
 $config = [

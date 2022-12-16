@@ -11,6 +11,7 @@ return [
     'AUTHENTICATION' => [
         'DB_ENV' => 'default',
         'JWT_SECRET' => @$_ENV['JWT_SECRET'],
+        'JWT_ALG' => 'HS256',
         'HASH_METHOD' => [
             PASSWORD_BCRYPT,
             ['cost' => 12]
