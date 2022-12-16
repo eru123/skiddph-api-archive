@@ -459,9 +459,7 @@ class ORM extends Helper
     {
         $this->filterInsertData();
         $this->query['action'] = 'update';
-        echo print_r($this->query, true), PHP_EOL;
         $this->sql = Parser::parse($this->query);
-        exit(print_r($this->sql, true));
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
