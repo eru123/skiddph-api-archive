@@ -5,6 +5,7 @@ namespace Api\Database;
 use PDO;
 use PDOStatement;
 use Exception;
+use Api\Lib\Arr;
 
 /**
  * Database Object-Relational Mapper
@@ -523,28 +524,33 @@ class ORM extends Helper
      * Read one
      * @return array
      */
-    public function readOne(): array
-    {
+    public function readOne(): Arr
+    {   
+        $this->query['action'] = 'select';
         $this->sql = Parser::parse($this->query);
+        echo $this->sql, PHP_EOL;
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
-        return $this->stmt->fetch(PDO::FETCH_ASSOC);
+        $res = $this->stmt->fetch(PDO::FETCH_ASSOC);
+        return Arr::from($res);
     }
 
     /**
      * Read many
      * @return array
      */
-    public function readMany(): array
+    public function readMany(): Arr
     {
+        $this->query['action'] = 'select';
         $this->sql = Parser::parse($this->query);
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
-        return $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        $res = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+        return Arr::from($res);
     }
 
     /**
