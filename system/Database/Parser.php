@@ -87,7 +87,7 @@ class Parser
     final public static function action_select(array $query): string
     {
         $table = @$query['table'];
-        $columns = @$query['columns'];
+        $columns = @$query['select'];
         $where = @$query['where'];
         $where = is_array($where) ? self::parse_where($where) : $where;
         $columns = is_array($columns) ? implode(', ', $columns) : $columns;
@@ -95,12 +95,12 @@ class Parser
     }
 
     final public static function filterData(array $query): array
-    {   
-        if(isset($query['data'])) {
+    {
+        if (isset($query['data'])) {
             $data = $query['data'];
             $query['data'] = Helper::isMultiArray($data) ? $data : [$data];
         }
-        
+
         return $query;
     }
 }
