@@ -16,6 +16,8 @@ use Api\Lib\{
     Date
 };
 
+use Api\Database\QueryError;
+
 class Users
 {
     private static $last_error = null;
@@ -118,7 +120,7 @@ class Users
             } catch (Exception $e) {
                 $orm->rollBack();
                 self::$last_error = $e->getMessage();
-                return false;
+                throw new QueryError($e->getMessage(), $e->getCode(), $e);
             }
         }
 
@@ -156,13 +158,13 @@ class Users
                 $user_id = $id;
                 $update_user_fields = ['user', 'hash'];
                 $user_data = Arr::from($item)->pick($update_user_fields)->arr();
-                
+
                 if (count($user_data) > 0) {
                     $orm->table(ModelUsers::TB)
                         ->where(['id' => $user_id])
                         ->data([self::injectDefaults($update_default, $user_data)])
                         ->update();
-                    echo "user_data: " . print_r($user_data, true) , PHP_EOL;
+                    echo "user_data: " . print_r($user_data, true), PHP_EOL;
                     echo "sql: ", print_r($orm->getLastQuery(), true), PHP_EOL;
                     echo "affected rows: ", print_r($orm->rowCount(), true), PHP_EOL;
                 }
