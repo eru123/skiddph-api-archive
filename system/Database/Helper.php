@@ -86,6 +86,7 @@ class Helper
         ];
 
         foreach ($condition as $key => $value) {
+            $value = is_array($value) ? "(" . implode(', ', $value) . ")" : $value;
             if (is_numeric($key)) {
                 $result[] = self::condition($column, $value);
             } else if (isset($conds[$key])) {

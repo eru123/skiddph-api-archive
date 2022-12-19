@@ -522,7 +522,7 @@ class ORM extends Helper
 
     /**
      * Read one
-     * @return array
+     * @return Arr
      */
     public function readOne(): Arr
     {   
@@ -539,7 +539,7 @@ class ORM extends Helper
 
     /**
      * Read many
-     * @return array
+     * @return Arr
      */
     public function readMany(): Arr
     {

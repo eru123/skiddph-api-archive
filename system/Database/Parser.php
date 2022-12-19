@@ -8,7 +8,7 @@ class Parser
 {
     final public static function parse(array $query): string
     {
-        // echo "QUERY: ", print_r($query, true), PHP_EOL;
+        echo "QUERY: ", print_r($query, true), PHP_EOL;
         $query = self::filterData($query);
         $action = @$query['action'];
         $action = "action_" . strtolower($action);
@@ -17,7 +17,7 @@ class Parser
         } catch (Exception $e) {
             throw new Exception("Invalid query action: $action");
         }
-        // echo "SQL: ", $sql, PHP_EOL;
+        echo "SQL: ", $sql, PHP_EOL;
         return $sql;
     }
 
@@ -87,11 +87,15 @@ class Parser
     final public static function action_select(array $query): string
     {
         $table = @$query['table'];
-        $columns = @$query['select'];
+        $columns = @$query['select'] ?: '*';
         $where = @$query['where'];
         $where = is_array($where) ? self::parse_where($where) : $where;
         $columns = is_array($columns) ? implode(', ', $columns) : $columns;
-        return "SELECT $columns FROM $table WHERE $where";
+        $join = @$query['join'];
+        $join = is_array($join) ? self::parse_join($join) : $join;
+        $order = @$query['order'];
+        $order = is_array($order) ? self::parse_order($order) : $order;
+        return "SELECT $columns FROM $table $join WHERE $where $order";
     }
 
     final public static function filterData(array $query): array
@@ -102,5 +106,25 @@ class Parser
         }
 
         return $query;
+    }
+
+    final public static function parse_join(array $joins): string
+    {
+        $sql = [];
+        foreach ($joins as $join) {
+            $type = $join['type'];
+            $table = $join['table'];
+            $alias = $join['alias'];
+            $on = @$join['on'];
+            $on = is_array($on) ? self::parse_where($on) : $on;
+            $sql[] = "$type JOIN $table $alias ON $on";
+        }
+
+        return implode(' ', $sql);
+    }
+
+    final public static function parse_order(array $orders): string
+    {
+        return "ORDER BY " . implode(', ', $orders);
     }
 }
