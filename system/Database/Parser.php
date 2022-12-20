@@ -8,7 +8,7 @@ class Parser
 {
     final public static function parse(array $query): string
     {
-        echo "QUERY: ", print_r($query, true), PHP_EOL;
+        // echo "QUERY: ", print_r($query, true), PHP_EOL;
         $query = self::filterData($query);
         $action = @$query['action'];
         $action = "action_" . strtolower($action);
@@ -17,7 +17,7 @@ class Parser
         } catch (Exception $e) {
             throw new Exception("Invalid query action: $action");
         }
-        echo "SQL: ", $sql, PHP_EOL;
+        // echo "SQL: ", $sql, PHP_EOL;
         return $sql;
     }
 
@@ -34,6 +34,28 @@ class Parser
             return '(' . implode(', ', $row) . ')';
         }, $values));
         return "INSERT INTO $table ($columns) VALUES $values";
+    }
+
+    final public static function action_upsert(array $query): string
+    {
+        $table = @$query['table'];
+        $data = @$query['data'];
+        $columns = array_keys($data[0]);
+        $values = array_map(function ($row) {
+            return array_values($row);
+        }, $data);
+        $columns = implode(', ', $columns);
+        $values = implode(', ', array_map(function ($row) {
+            return '(' . implode(', ', $row) . ')';
+        }, $values));
+        $set = [];
+        foreach ($data as $value) {
+            foreach ($value as $key => $val) {
+                $set[] = "$key = $val";
+            }
+        }
+        $set = implode(', ', $set);
+        return "INSERT INTO $table ($columns) VALUES $values ON DUPLICATE KEY UPDATE $set";
     }
 
     final public static function action_update(array $query): string
