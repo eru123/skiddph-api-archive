@@ -15,7 +15,7 @@ Bootstrapper::init(__DIR__);
 
 echo "START", PHP_EOL;
 
-print_r(Info::userInfo([1, 2, 3]));
+print_r(Info::info([1, 2, 3]));
 
 // Users::create([
 //     'user' => 'admin',
