@@ -83,10 +83,6 @@ class Users
         }
 
         $date = Date::parse("now", 'datetime');
-        $create_default = [
-            'created_at' => $date,
-            'updated_at' => $date,
-        ];
 
         $update_default = [
             'updated_at' => $date,
