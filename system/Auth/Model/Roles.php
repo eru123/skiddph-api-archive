@@ -45,7 +45,9 @@ class Roles extends Model
             ->delete();
 
         return $orm->table(self::TB)
-            ->data($roles)->rowCount() > 0;
+            ->data($roles)
+            ->insert()
+            ->rowCount() > 0;
     }
 
     public static function get(int $user_id)
@@ -63,18 +65,67 @@ class Roles extends Model
         }, $roles);
     }
 
-    public static function has(int $user_id, string $role)
+    public static function add(int $user_id, $role)
     {
-        $role = strtoupper($role);
-        $roles = Auth::db()->table(self::TB)
+        $roles = [];
+        if (is_array($role)) {
+            $roles = $role;
+        } else {
+            $delims = ['|', ',', ' '];
+            foreach ($delims as $delim) {
+                if (strpos($role, $delim) !== false) {
+                    $roles = explode($delim, $role);
+                    break;
+                }
+            }
+        }
+        $roles = array_map(function ($role) use ($user_id) {
+            $role = trim($role);
+            $role = strtoupper($role);
+            return [
+                'user_id' => $user_id,
+                'role' => $role
+            ];
+        }, $roles);
+
+        return Auth::db()->table(self::TB)
+            ->data($roles)
+            ->upsert()
+            ->rowCount() > 0;
+    }
+
+    public static function has(int $user_id, $roles)
+    {
+        if (is_array($roles)) {
+            $roles = array_map(function ($role) {
+                $role = trim($role);
+                $role = strtoupper($role);
+                return $role;
+            }, $roles);
+        } else {
+            $delims = ['|', ',', ' '];
+            foreach ($delims as $delim) {
+                if (strpos($roles, $delim) !== false) {
+                    $roles = explode($delim, $roles);
+                    break;
+                }
+            }
+        }
+        
+        $res = Auth::db()->table(self::TB)
             ->select('role')
             ->where([
                 'user_id' => $user_id,
-                'role' => $role
+            ])
+            ->and()
+            ->where([
+                'role' => [
+                    'IN' => $roles
+                ]
             ])
             ->readOne()
             ->arr();
 
-        return !empty($roles);
+        return !empty($res);
     }
 }
