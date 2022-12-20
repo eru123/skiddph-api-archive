@@ -145,7 +145,7 @@ class ORM extends Helper
         if (!isset($this->query[$key])) {
             $this->query[$key] = [];
         }
-        $this->query[$key][] = self::function($function, $column, $alias);
+        $this->query[$key][] = self::function ($function, $column, $alias);
         $this->lastQueryKey = $key;
         return $this;
     }
@@ -276,7 +276,7 @@ class ORM extends Helper
      * OR
      * @return self
      */
-    public function or(): self
+    public function or (): self
     {
         $allowed = ['where', 'on', 'having'];
         if (in_array($this->lastQueryKey, $allowed)) {
@@ -293,7 +293,7 @@ class ORM extends Helper
      * AND
      * @return self
      */
-    public function and(): self
+    public function and (): self
     {
         $allowed = ['where', 'on', 'having'];
         if (in_array($this->lastQueryKey, $allowed)) {
@@ -469,6 +469,22 @@ class ORM extends Helper
     }
 
     /**
+     * Upsert MySQL
+     * @return self
+     */
+    public function upsert(): self
+    {
+        $this->filterInsertData();
+        $this->query['action'] = 'upsert';
+        $this->sql = Parser::parse($this->query);
+        $this->query = [];
+        $this->lastQueryKey = '';
+        $this->stmt = $this->pdo->prepare($this->sql);
+        $this->stmt->execute();
+        return $this;
+    }
+
+    /**
      * Quote and escape data
      * @param string $data
      * @return string
@@ -524,17 +540,16 @@ class ORM extends Helper
      * Read one
      * @return Arr
      */
-    public function readOne(): Arr
-    {   
+    public function readOne(): Arr|null
+    {
         $this->query['action'] = 'select';
         $this->sql = Parser::parse($this->query);
-        echo $this->sql, PHP_EOL;
         $this->query = [];
         $this->lastQueryKey = '';
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
         $res = $this->stmt->fetch(PDO::FETCH_ASSOC);
-        return Arr::from($res);
+        return is_array($res) ? Arr::from($res) : null;
     }
 
     /**
@@ -550,7 +565,7 @@ class ORM extends Helper
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
         $res = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
-        return Arr::from($res);
+        return Arr::from(is_array($res) ? $res : []);
     }
 
     /**
