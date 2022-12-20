@@ -49,71 +49,18 @@ class Users
                     ->data(self::injectDefaultsMany($create_up_date_default, [$data]))
                     ->insert()
                     ->lastInsertId();
+
                 $user_cols = $orm->table(ModelUsers::TB)
                     ->columns();
                 $data = Arr::from($data)->omit($user_cols)->arr();
                 $roles = self::rolesFromData($data);
 
                 if (count($roles) > 0) {
-                    $orm->table(ModelRoles::TB)
-                        ->data(
-                            self::injectDefaultsMany(
-                                $create_up_date_default,
-                                Arr::from($roles)->map(function ($role) use ($user_id) {
-                                    return ['user_id' => $user_id, 'role' => $role];
-                                })->arr()
-                            )
-                        )
-                        ->insert();
+                    ModelRoles::set($user_id, $roles);
                 }
-
-                $single_info = [];
-                $multi_info = [];
 
                 foreach ($data as $key => $value) {
-                    if (is_array($value)) {
-                        $multi_info[$key] = $value;
-                    } else {
-                        $single_info[$key] = $value;
-                    }
-                }
-
-                if (count($single_info) > 0) {
-                    $orm->table(ModelInfo::TB)
-                        ->data(
-                            self::injectDefaultsMany(
-                                $create_up_date_default,
-                                Arr::from($single_info)->map(function ($value, $key) use ($user_id) {
-                                    return ['user_id' => $user_id, 'name' => $key, 'value' => $value];
-                                })->arr()
-                            )
-                        )
-                        ->insert();
-                }
-
-                if (count($multi_info) > 0) {
-                    foreach ($multi_info as $key => $values) {
-                        $info_id = $orm->table(ModelInfo::TB)
-                            ->data([
-                                self::injectDefaults(
-                                    $create_up_date_default,
-                                    ['user_id' => $user_id, 'name' => $key, 'value' => null]
-                                )
-                            ])
-                            ->insert()
-                            ->lastInsertId();
-
-                        $orm->table(ModelInfo::TB)
-                            ->data(
-                                self::injectDefaultsMany(
-                                    $create_up_date_default,
-                                    Arr::from($values)->map(function ($value, $attr) use ($info_id, $user_id) {
-                                        return ['parent_id' => $info_id, 'user_id' => $user_id, 'name' => $attr, 'value' => $value];
-                                    })->arr()
-                                )
-                            )
-                            ->insert();
-                    }
+                    ModelInfo::set($user_id, $key, $value);
                 }
 
                 $orm->commit();
@@ -164,9 +111,6 @@ class Users
                         ->where(['id' => $user_id])
                         ->data([self::injectDefaults($update_default, $user_data)])
                         ->update();
-                    echo "user_data: " . print_r($user_data, true), PHP_EOL;
-                    echo "sql: ", print_r($orm->getLastQuery(), true), PHP_EOL;
-                    echo "affected rows: ", print_r($orm->rowCount(), true), PHP_EOL;
                 }
 
                 $user_cols = $orm->table(ModelUsers::TB)
@@ -175,126 +119,12 @@ class Users
                 $roles = self::rolesFromData($data);
 
                 if (count($roles) > 0) {
-                    $orm->table(ModelRoles::TB)
-                        ->where(['user_id' => $user_id])
-                        ->delete();
-
-                    $orm->table(ModelRoles::TB)
-                        ->data(
-                            self::injectDefaultsMany(
-                                $create_default,
-                                Arr::from($roles)->map(function ($role) use ($user_id) {
-                                    return ['user_id' => $user_id, 'role' => $role];
-                                })->arr()
-                            )
-                        )
-                        ->insert();
+                    ModelRoles::set($user_id, $roles);
                 }
-
-                $single_info = [];
-                $multi_info = [];
 
                 foreach ($data as $key => $value) {
-                    if (is_array($value)) {
-                        $multi_info[$key] = $value;
-                    } else {
-                        $single_info[$key] = $value;
-                    }
+                    ModelInfo::set($user_id, $key, $value);
                 }
-
-                echo 'count($single_info): ', count($single_info), ">> ", print_r($single_info, true), PHP_EOL;
-
-                if (count($single_info) > 0) {
-                    foreach ($single_info as $key => $value) {
-                        echo "key: ", $key, " value: ", $value, " user_id: ", $user_id, PHP_EOL;
-                        $info_id = $orm->table(ModelInfo::TB)
-                            ->where([
-                                'user_id' => $user_id,
-                                'name' => $key,
-                            ])
-                            ->and()
-                            ->where($orm->f('ISNULL(?)', 'parent_id')->query())
-                            ->select('id')
-                            ->readOne();
-                        // $info_id = $orm->table(ModelInfo::TB)
-                        //     ->where([
-                        //         'user_id' => $user_id,
-                        //         // 'parent_id' => null,
-                        //         // 'name' => $key,
-                        //     ])
-                        //     // ->select('id')
-                        //     ->readMany();
-                        echo "info_id: ", print_r($info_id, true), PHP_EOL;
-                        // if ($info_id) {
-                        //     $orm->table(ModelInfo::TB)
-                        //         ->data(self::injectDefaults($update_default, ['value' => $value]))
-                        //         ->where(['id' => $info_id])
-                        //         ->update();
-                        // } else {
-                        //     $orm->table(ModelInfo::TB)
-                        //         ->data(
-                        //             self::injectDefaults(
-                        //                 $update_default,
-                        //                 ['user_id' => $user_id, 'name' => $key, 'value' => $value]
-                        //             )
-                        //         )
-                        //         ->insert();
-                        // }
-                    }
-                }
-
-                // if (count($multi_info) > 0) {
-                //     foreach ($multi_info as $key => $values) {
-                //         $info_id = $orm->table(ModelInfo::TB)
-                //             ->where([
-                //                 'user_id' => $user_id,
-                //                 'parent_id' => null,
-                //                 'name' => $key,
-                //             ])
-                //             ->select('id')
-                //             ->readOne();
-
-                //         echo print_r($info_id, true), PHP_EOL;
-
-                //         if ($info_id) {
-                //             $orm->table(ModelInfo::TB)
-                //                 ->where(['parent_id' => $info_id])
-                //                 ->delete();
-
-                //             $orm->table(ModelInfo::TB)
-                //                 ->data(
-                //                     self::injectDefaultsMany(
-                //                         $update_default,
-                //                         Arr::from($values)->map(function ($value, $attr) use ($info_id, $user_id) {
-                //                             return ['parent_id' => $info_id, 'user_id' => $user_id, 'name' => $attr, 'value' => $value];
-                //                         })->arr()
-                //                     )
-                //                 )
-                //                 ->insert();
-                //         } else {
-                //             $info_id = $orm->table(ModelInfo::TB)
-                //                 ->data([
-                //                     self::injectDefaults(
-                //                         $update_default,
-                //                         ['user_id' => $user_id, 'name' => $key, 'value' => null]
-                //                     )
-                //                 ])
-                //                 ->insert()
-                //                 ->lastInsertId();
-
-                //             $orm->table(ModelInfo::TB)
-                //                 ->data(
-                //                     self::injectDefaultsMany(
-                //                         $update_default,
-                //                         Arr::from($values)->map(function ($value, $attr) use ($info_id, $user_id) {
-                //                             return ['parent_id' => $info_id, 'user_id' => $user_id, 'name' => $attr, 'value' => $value];
-                //                         })->arr()
-                //                     )
-                //                 )
-                //                 ->insert();
-                //         }
-                //     }
-                // }
 
                 $orm->commit();
             } catch (Exception $e) {
@@ -305,6 +135,38 @@ class Users
         }
 
         return true;
+    }
+
+    static function find($where, bool $filter = true, bool $info = true)
+    {
+        if (is_numeric($where)) {
+            $user = ModelUsers::user($where);
+        } else if (is_array($where) && isset($where['id'])) {
+            $user = ModelUsers::user($where['id']);
+        } else if (is_array($where)) {
+            $user_id = ModelInfo::find($where);
+            if (empty($user_id)) {
+                return null;
+            }
+            $user = ModelUsers::user($user_id);
+        }
+
+        if (empty($user)) {
+            return null;
+        }
+
+        if ($filter) {
+            $user = array_filter($user, function ($key) {
+                return !in_array($key, ['last_hash', 'last_user', 'hash', 'updated_at', 'status']);
+            }, ARRAY_FILTER_USE_KEY);
+        }
+
+        if ($info) {
+            $user['roles'] = ModelRoles::get($user['id']);
+            $user = array_merge($user, ModelInfo::info($user['id'] ?? []));
+        }
+
+        return $user;
     }
 
     public static function lastError(): ?string
