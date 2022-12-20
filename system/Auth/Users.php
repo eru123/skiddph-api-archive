@@ -143,6 +143,8 @@ class Users
             $user = ModelUsers::user($where);
         } else if (is_array($where) && isset($where['id'])) {
             $user = ModelUsers::user($where['id']);
+        } else if (is_array($where) && isset($where['user'])) {
+            $user = ModelUsers::user($where['user'], "user");
         } else if (is_array($where)) {
             $user_id = ModelInfo::find($where);
             if (empty($user_id)) {
