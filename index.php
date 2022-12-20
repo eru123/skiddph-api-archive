@@ -1,4 +1,6 @@
 <?php
+
+use Api\Auth\Model\Info;
 use Api\Auth\User;
 
 ini_set('display_errors', 1);
@@ -13,6 +15,7 @@ Bootstrapper::init(__DIR__);
 
 echo "START", PHP_EOL;
 
+print_r(Info::info([1, 2, 3]));
 
 // Users::create([
 //     'user' => 'admin',
@@ -25,12 +28,12 @@ echo "START", PHP_EOL;
 //     'role' => 'SUPERADMIN'
 // ]);
 
-Users::update(1, [
-    'user' => 'admin1',
-    'pass' => 'pass1',
-    // 'role' => 'SUPER|ADMIN',
-    'profile' => 'x',
-]);
+// Users::update(1, [
+//     'user' => 'admin1',
+//     'pass' => 'pass1',
+//     // 'role' => 'SUPER|ADMIN',
+//     'profile' => 'x',
+// ]);
 
 // $orm = Auth::db();
 
