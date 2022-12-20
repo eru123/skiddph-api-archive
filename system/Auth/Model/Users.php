@@ -13,24 +13,24 @@ class Users extends Model
         parent::__construct(Auth::db(), self::TB);
     }
 
-    public static function user(int $user_id)
+    public static function user(int $user_id, $field = "id")
     {
         $user = Auth::db()->table(self::TB)
             ->where([
-                'id' => $user_id
+                $field => $user_id
             ])
             ->readOne()
             ->arr();
         return empty($user) ? null : $user;
     }
 
-    public static function users(array $user_ids)
+    public static function users($user_ids, $field = "id")
     {
         $users = Auth::db()->table(self::TB)
             ->where([
-                'id' => [
+                $field => is_array($user_ids) ? [
                     'IN' => $user_ids
-                ]
+                ] : $user_ids
             ])
             ->readMany()
             ->arr();
