@@ -17,7 +17,7 @@ class Helper
      * @param string $alias
      * @return string
      */
-    public static function function(string $function, string|array $columns, string $alias = ''): string
+    public static function function (string $function, string|array $columns, string $alias = ''): string
     {
         $columns = is_array($columns) ? implode(', ', $columns) : $columns;
         return "$function($columns)" . ($alias ? " AS $alias" : '');
@@ -247,5 +247,41 @@ class Helper
         }
 
         return $phinx;
+    }
+
+    /**
+     * Encode data to JSON value
+     * @param mixed $data
+     * @return string
+     */
+    public static function jsonEncode(mixed $data): string
+    {
+        return json_encode($data, JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Decode JSON value to data
+     * @param string $data
+     * @return mixed
+     */
+    public static function jsonDecode(string $data): mixed
+    {
+        $rgx = [
+            ['/^(false)$/i', function($v) {
+                return false;
+            }],
+            ['/^(true)$/i', function($v) {
+                return true;
+            }],
+            ['/^(null)$/i', function($v) {
+                return null;
+            }]
+        ];
+        foreach ($rgx as $value) {
+            if (preg_match($value[0], $data)) {
+                return $value[1]($data);
+            }
+        }
+        return json_decode($data, true);
     }
 }
