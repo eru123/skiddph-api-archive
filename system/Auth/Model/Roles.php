@@ -50,7 +50,7 @@ class Roles extends Model
             ->rowCount() > 0;
     }
 
-    public static function get(int $user_id)
+    public static function roles(int $user_id)
     {
         $roles = Auth::db()->table(self::TB)
             ->select('role')
