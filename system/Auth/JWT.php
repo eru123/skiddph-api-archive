@@ -17,6 +17,7 @@ class JWT
     public static $timestamp = null;
 
     public static $cfg_key_secret = 'JWT_SECRET';
+    public static $cfg_key_refresh = 'JWT_REFRESH';
     public static $cfg_key_algo = 'JWT_ALG';
     public static $default_algo = 'HS256';
 
@@ -111,10 +112,10 @@ class JWT
         return (array) $payload;
     }
 
-    public static function encode(array $payload): string
+    public static function encode(array $payload, string $key = null): string
     {
         $cfg = Auth::config();
-        $key = $cfg->get(self::$cfg_key_secret);
+        $key = $key ?: $cfg->get(self::$cfg_key_secret);
         $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
 
         if (empty($key)) {
@@ -136,6 +137,14 @@ class JWT
             }
         }
 
+        if (isset($payload['iat'])) {
+            $payload['iat'] = Date::parse('now', "s", Date::UNIT);
+        }
+
+        if (isset($payload['exp'])) {
+            $payload['exp'] = Date::parse('now + 1day', "s", Date::UNIT);
+        }
+
         $header = ['typ' => 'JWT', 'alg' => $alg];
         $segments = [];
         $segments[] = self::urlsafeB64Encode((string) self::jsonEncode($header));
@@ -146,6 +155,46 @@ class JWT
         $segments[] = self::urlsafeB64Encode($signature);
 
         return implode('.', $segments);
+    }
+
+    public static function issue_refresh(string $token, string $key = null): string
+    {
+        $cfg = Auth::config();
+        $decoded = self::decode($token);
+        $time_diff = $decoded['exp'] - $decoded['iat'];
+        $exp = Date::parse('now + ' . $time_diff . 's', "s", Date::UNIT);
+
+        $payload = [
+            'iat' => Date::parse('now', "s", Date::UNIT),
+            'exp' => $exp,
+            'token' => $token
+        ];
+        $key = $key ? $key : $cfg->get(self::$cfg_key_secret);
+        return self::encode($payload, $key);
+    }
+
+    public static function refresh(string $token, string $refresh): string
+    {
+        $cfg = Auth::config();
+        try {
+            $refresh = self::decode($token);
+            $payload = self::decode($refresh['token']);
+            if ($token !== @$refresh['token']) {
+                throw new Exception('Invalid refresh token', 401);
+            }
+
+            if ($refresh['exp'] < Date::parse('now', "s", Date::UNIT)) {
+                throw new Exception('Refresh token expired', 401);
+            }
+
+            $time_diff = $payload['exp'] - $payload['iat'];
+            $payload['iat'] = Date::parse('now', "s", Date::UNIT);
+            $payload['exp'] = $payload['iat'] + $time_diff;
+
+            return self::encode($payload, $cfg->get(self::$cfg_key_secret));
+        } catch (Exception $e) {
+            throw new Exception('Invalid refresh token', 401);
+        }
     }
 
     public static function sign(string $msg, string $key, string $alg): string
@@ -240,16 +289,16 @@ class JWT
     private static function handleJsonError(int $errno): void
     {
         $messages = [
-            JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
-            JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
-            JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
-            JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
-            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters'
+        JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
+        JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
+        JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
+        JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
+        JSON_ERROR_UTF8 => 'Malformed UTF-8 characters'
         ];
         throw new Exception(
             isset($messages[$errno])
-                ? $messages[$errno]
-                : 'Unknown JSON error: ' . $errno,
+            ? $messages[$errno]
+            : 'Unknown JSON error: ' . $errno,
         );
     }
 
