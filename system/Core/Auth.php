@@ -1,10 +1,17 @@
 <?php
 
 use Api\Database\ORM;
-
+use Api\Lib\Arr;
 use Api\Auth\{
     JWT,
-    Password
+    Password,
+    Users
+};
+
+use Api\Auth\Model\{
+    Users as UsersModel,
+    Roles as RolesModel,
+    Info as InfoModel
 };
 
 class Auth implements PluginDB, PluginKey
@@ -27,7 +34,49 @@ class Auth implements PluginDB, PluginKey
 
     final static function db(): ORM
     {
-        $cfg = self::config();
-        return Database::connect($cfg->get('DB_ENV'));
+        return Database::connect(self::config()->get('DB_ENV'));
+    }
+
+    final static function login(string $user, string $pass, array $opts = [], array $payload_keys = [])
+    {
+        $opts_default = [
+            'ttl' => 'long',
+        ];
+
+        $opts = array_merge($opts_default, $opts);
+
+        $orm = self::db();
+        $user = Users::find(is_numeric($user) ? $user : [
+            'user' => $orm->quote($user),
+        ], false, false);
+
+        if (empty($user)) {
+            return null;
+        }
+
+        if (!Password::verify($pass, $user['hash'])) {
+            return null;
+        }
+
+        $user = Users::find(['id' => $user['id']]);
+
+        $payload_keys_default = ['id', 'user', 'roles'];
+        $payload_keys = array_merge($payload_keys_default, $payload_keys);
+
+        $expires_at = @self::config()->get('TOKEN_EXPIRE_AT')[$opts['ttl']] ?? 'now + 7days';
+
+        $payload = Arr::from($user)->pick($payload_keys)->merge([
+            'iat' => 'now',
+            'exp' => $expires_at,
+        ])->arr();
+
+        $token = JWT::encode($payload);
+        $refresh_token = JWT::issue_refresh($token);
+
+        return [
+            'data' => $user,
+            'token' => $token,
+            'refresh_token' => $refresh_token,
+        ];
     }
 }
