@@ -160,8 +160,8 @@ class Users
         }
 
         if ($info) {
-            $user['roles'] = ModelRoles::get($user['id']);
-            $user = array_merge($user, ModelInfo::info($user['id'] ?? []));
+            $user['roles'] = ModelRoles::roles($user['id']);
+            $user = array_merge($user, ModelInfo::info($user['id']) ?? []);
         }
 
         return $user;
