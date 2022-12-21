@@ -9,20 +9,6 @@ An out of the box complete and centralized general purpose API system that aims 
 # Setup
 The system is planned to host on any system that has an ftp server for uploading files, with the help of GitHub actions. As of now, this is the only supported deployment method, but we also planned to support on other major platforms such as AWS, Azure, GCP, Docker, Vercel, Heroku, and Etc.
 
-## Required GitHub Secrets
-
-Go to `https://github.com/{username}/{repository}/settings/secrets/actions` and add required secrets for deployment.
-
-| Name | Description | Example |
-| --- | --- | --- |
-| `FTP_PASSWORD` | Password for FTP Server | `123456` |
-| `FTP_USERNAME` | Username for FTP Server | `admin` |
-| `FTP_SERVER` | FTP Server Address | `ftp.domain.com` |
-| `JWT_SECRET` | JWT Secret token | `My5up3r53cr3tK3Y` |
-| `DEFAULT_DB_DSN` | Default Database DSN | `mysql:host=localhost;port=3306;dbname=db` |
-| `DEFAULT_DB_USER` | Default Database Username | `root` |
-| `DEFAULT_DB_PASS` | Default Database Password | `root` |
-
 ## Required Environment Variables
 
 The system will look for `.env` file in the root directory of the project. If it doesn't exist, it will look for environment variables registered in the system.
