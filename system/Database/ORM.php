@@ -549,7 +549,7 @@ class ORM extends Helper
         $this->stmt = $this->pdo->prepare($this->sql);
         $this->stmt->execute();
         $res = $this->stmt->fetch(PDO::FETCH_ASSOC);
-        return is_array($res) ? Arr::from($res) : null;
+        return Arr::from(is_array($res) ? $res : []);
     }
 
     /**
