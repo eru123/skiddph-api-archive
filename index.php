@@ -14,8 +14,9 @@ use Api\Auth\Users;
 Bootstrapper::init(__DIR__);
 
 echo "START", PHP_EOL;
+// print_r(Info::info([1, 2, 3]));
 
-print_r(Info::info([1, 2, 3]));
+echo json_encode(Auth::login('admin', 'pass'), JSON_PRETTY_PRINT), PHP_EOL;
 
 // Users::create([
 //     'user' => 'admin',
