@@ -79,4 +79,26 @@ class Auth implements PluginDB, PluginKey
             'refresh_token' => $refresh_token,
         ];
     }
+
+    final static function refreshToken(string $token, string $refresh_token)
+    {
+        $token = JWT::refresh($token, $refresh_token);
+
+        return [
+            'token' => $token,
+            'refresh_token' => JWT::issue_refresh($token),
+        ];
+    }
+
+    final static function register(string $user, string $pass, $roles = [], array $data = [])
+    {
+        $to_insert = [
+            'user' => $user,
+            'pass' => $pass,
+            'roles' => $roles,
+        ];
+        $to_insert = array_merge($data, $to_insert);
+        Users::create($to_insert);
+        return true;
+    }
 }
