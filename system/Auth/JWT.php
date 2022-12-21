@@ -177,7 +177,7 @@ class JWT
     {
         $cfg = Auth::config();
         try {
-            $refresh = self::decode($token);
+            $refresh = self::decode($refresh);
             $payload = self::decode($refresh['token']);
             if ($token !== @$refresh['token']) {
                 throw new Exception('Invalid refresh token', 401);
