@@ -50,6 +50,7 @@ class Auth implements PluginDB, PluginKey
             'user' => $orm->quote($user),
         ], false, false);
 
+
         if (empty($user)) {
             return null;
         }
@@ -71,12 +72,11 @@ class Auth implements PluginDB, PluginKey
         ])->arr();
 
         $token = JWT::encode($payload);
-        $refresh_token = JWT::issue_refresh($token);
 
         return [
             'data' => $user,
             'token' => $token,
-            'refresh_token' => $refresh_token,
+            'refresh_token' => JWT::issue_refresh($token),
         ];
     }
 

@@ -1,7 +1,5 @@
 <?php
 
-namespace Api\Lib;
-
 class Request
 {
     static function ip(): string
