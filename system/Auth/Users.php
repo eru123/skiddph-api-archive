@@ -135,7 +135,7 @@ class Users
 
     static function find($where, bool $filter = true, bool $info = true)
     {
-        if (is_numeric($where)) {
+        if (!is_array($where) && preg_match('/^[0-9]+$/', $where)) {
             $user = ModelUsers::user($where);
         } else if (is_array($where) && isset($where['id'])) {
             $user = ModelUsers::user($where['id']);
@@ -163,7 +163,6 @@ class Users
             $user['roles'] = ModelRoles::roles($user['id']);
             $user = array_merge($user, ModelInfo::info($user['id']) ?? []);
         }
-
         return $user;
     }
 
