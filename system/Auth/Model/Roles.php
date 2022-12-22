@@ -53,16 +53,18 @@ class Roles extends Model
     public static function roles(int $user_id)
     {
         $roles = Auth::db()->table(self::TB)
-            ->select('role')
+            ->select('GROUP_CONCAT(ROLE)', 'roles')
             ->where([
-                'user_id' => $user_id
+                'user_id' => 1
             ])
-            ->readMany()
+            ->readOne()
             ->arr();
 
-        return array_map(function ($role) {
-            return $role['role'];
-        }, $roles);
+        if (empty($roles)) {
+            return [];
+        }
+
+        return explode(',', $roles['roles']);
     }
 
     public static function add(int $user_id, $role)
@@ -111,7 +113,7 @@ class Roles extends Model
                 }
             }
         }
-        
+
         $res = Auth::db()->table(self::TB)
             ->select('role')
             ->where([
