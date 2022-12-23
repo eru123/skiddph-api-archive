@@ -13,23 +13,28 @@ class Roles extends Model
         parent::__construct(Auth::db(), self::TB);
     }
 
-    public static function set(int $user_id, $role)
+    public static function parse_roles($roles)
     {
-        $roles = [];
-        if (is_array($role)) {
-            $roles = $role;
-        } else {
+        if (!is_array($roles)) {
             $delims = ['|', ',', ' '];
             foreach ($delims as $delim) {
-                if (strpos($role, $delim) !== false) {
-                    $roles = explode($delim, $role);
+                if (strpos($roles, $delim) !== false) {
+                    $roles = explode($delim, $roles);
                     break;
                 }
             }
         }
-        $roles = array_map(function ($role) use ($user_id) {
+        return array_map(function ($role) {
             $role = trim($role);
             $role = strtoupper($role);
+            return $role;
+        }, $roles);
+    }
+
+    public static function set(int $user_id, $role)
+    {
+        $roles = self::parse_roles($role);
+        $roles = array_map(function ($role) use ($user_id) {
             return [
                 'user_id' => $user_id,
                 'role' => $role
@@ -69,21 +74,8 @@ class Roles extends Model
 
     public static function add(int $user_id, $role)
     {
-        $roles = [];
-        if (is_array($role)) {
-            $roles = $role;
-        } else {
-            $delims = ['|', ',', ' '];
-            foreach ($delims as $delim) {
-                if (strpos($role, $delim) !== false) {
-                    $roles = explode($delim, $role);
-                    break;
-                }
-            }
-        }
+        $roles = self::parse_roles($role);
         $roles = array_map(function ($role) use ($user_id) {
-            $role = trim($role);
-            $role = strtoupper($role);
             return [
                 'user_id' => $user_id,
                 'role' => $role
@@ -98,22 +90,7 @@ class Roles extends Model
 
     public static function has(int $user_id, $roles)
     {
-        if (is_array($roles)) {
-            $roles = array_map(function ($role) {
-                $role = trim($role);
-                $role = strtoupper($role);
-                return $role;
-            }, $roles);
-        } else {
-            $delims = ['|', ',', ' '];
-            foreach ($delims as $delim) {
-                if (strpos($roles, $delim) !== false) {
-                    $roles = explode($delim, $roles);
-                    break;
-                }
-            }
-        }
-
+        $roles = self::parse_roles($roles);
         $res = Auth::db()->table(self::TB)
             ->select('role')
             ->where([

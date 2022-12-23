@@ -5,6 +5,8 @@ class Router
     private $routes = array();
     private $base = '';
     private $route = null;
+    private $exception_cb = null;
+    private $error_cb = null;
 
     public function routes()
     {
@@ -38,16 +40,17 @@ class Router
         $route['pipes'] = $pipes;
         $route['match'] = false;
         $this->routes[] = $route;
+        return $this;
     }
 
     public function get(string $path, ...$pipes)
     {
-        $this->request('GET', $path, ...$pipes);
+        return $this->request('GET', $path, ...$pipes);
     }
 
     public function post(string $path, ...$pipes)
     {
-        $this->request('POST', $path, ...$pipes);
+        return $this->request('POST', $path, ...$pipes);
     }
 
     public function add(Router $router)
@@ -90,43 +93,82 @@ class Router
         foreach ($this->routes as $route) {
             if ($route['method'] == $method) {
                 $is_match = preg_match($route['needle'], $path, $params);
-                // $params = self::extract_params($params);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'route' => $route,
-                    'params' => $params,
-                ]), PHP_EOL;
+                $params = self::extract_params($params);
 
-                // if (preg_match($route['needle'], $path, $params)) {
-                // echo "Matched route: " . $route['path'] . PHP_EOL;
-                // array_shift($params);
-                // $pipes = $route['pipes'];
+                if ($is_match) {
+                    $pipes = $route['pipes'];
 
-                // $fpipe = array_shift($pipes);
-                // $res = $fpipe(...$params);
+                    if (count($pipes) == 0) {
+                        throw new Exception("Route has no handler", 500);
+                    }
 
-                // foreach ($pipes as $pipe) {
-                //     $res = $pipe($res);
-                // }
+                    $fpipe = array_shift($pipes);
+                    $res = $fpipe($params);
 
-                // return $res;
-                // return $route;
-                // }
+                    if (!empty($pipes)) {
+                        $res = [$res];
+
+                        foreach ($pipes as $pipe) {
+                            $res = call_user_func_array($pipe, $res);
+                        }
+                    }
+
+                    return $res;
+                }
             }
         }
 
         throw new Exception("Route not found", 404);
     }
 
+    public function exception(callable $fn)
+    {
+        $this->exception_cb = $fn;
+    }
+
+    public function error(callable $fn)
+    {
+        $this->error_cb = $fn;
+    }
+
     public function run()
     {
-        $this->exec();
-        // $res = $this->exec();
-        // if (is_array($res)) {
-        //     header('Content-Type: application/json');
-        //     echo json_encode($res);
-        // } else {
-        //     echo $res;
-        // }
+        try {
+            $res = $this->exec();
+            if (is_array($res)) {
+                header('Content-Type: application/json');
+                http_response_code(200);
+                echo json_encode($res);
+            } else {
+                echo $res;
+            }
+        } catch (Exception $e) {
+            $fn = $this->exception_cb;
+            if ($fn) {
+                call_user_func_array($fn, [$e->getMessage(), $e->getCode()]);
+            } else {
+                header('Content-Type: application/json');
+                http_response_code($e->getCode());
+                echo json_encode([
+                    'code' => $e->getCode(),
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            exit;
+        } 
+        catch (Error $e) {
+            $fn = $this->error_cb;
+            if ($fn) {
+                call_user_func_array($fn, [$e->getMessage(), $e->getCode()]);
+            } else {
+                header('Content-Type: application/json');
+                http_response_code(500);
+                echo json_encode([
+                    'code' => 500,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+            exit;
+        }
     }
 }

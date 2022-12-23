@@ -14,7 +14,7 @@ return [
         'JWT_REFRESH' => @$_ENV['JWT_SECRET'],
         'JWT_ALG' => 'HS256',
         'HASH_METHOD' => [
-        PASSWORD_BCRYPT,
+            PASSWORD_BCRYPT,
             ['cost' => 12]
         ],
         'TOKEN_EXPIRE_AT' => [
