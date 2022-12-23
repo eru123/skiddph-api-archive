@@ -37,7 +37,7 @@ class Auth implements PluginDB, PluginKey
         return Database::connect(self::config()->get('DB_ENV'));
     }
 
-    final static function login(string $user, string $pass, array $opts = [], array $payload_keys = [])
+    final static function login($user, string $pass, array $opts = [], array $payload_keys = [])
     {
         $opts_default = [
             'ttl' => 'long',
@@ -46,20 +46,24 @@ class Auth implements PluginDB, PluginKey
         $opts = array_merge($opts_default, $opts);
 
         $orm = self::db();
+
         $user = Users::find(is_numeric($user) ? $user : [
             'user' => $orm->quote($user),
         ], false, false);
 
-
         if (empty($user)) {
-            return null;
+            throw new Exception('Invalid credentials', 401);
         }
 
         if (!Password::verify($pass, $user['hash'])) {
-            return null;
+            throw new Exception('Invalid credentials', 401);
         }
 
-        $user = Users::find(['id' => $user['id']]);
+        try {
+            $user = Users::find($user['id'], true, true);
+        } catch (Exception $e) {
+            throw new Error('Failed to login', 500);
+        }
 
         $payload_keys_default = ['id', 'user', 'roles'];
         $payload_keys = array_merge($payload_keys_default, $payload_keys);
@@ -74,6 +78,7 @@ class Auth implements PluginDB, PluginKey
         $token = JWT::encode($payload);
 
         return [
+            "success" => true,
             'data' => $user,
             'token' => $token,
             'refresh_token' => JWT::issue_refresh($token),
@@ -85,6 +90,7 @@ class Auth implements PluginDB, PluginKey
         $token = JWT::refresh($token, $refresh_token);
 
         return [
+            'success' => true,
             'token' => $token,
             'refresh_token' => JWT::issue_refresh($token),
         ];

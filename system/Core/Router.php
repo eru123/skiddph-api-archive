@@ -6,7 +6,23 @@ class Router
     private $base = '';
     private $route = null;
     private $exception_cb = null;
+
     private $error_cb = null;
+
+    public function __construct()
+    {
+        $default_callback = function ($msg, $code) {
+            header('Content-Type: application/json');
+            http_response_code($code);
+            echo json_encode([
+                'code' => $code,
+                'error' => $msg,
+            ]);
+        };
+
+        $this->exception_cb = $default_callback;
+        $this->error_cb = $default_callback;
+    }
 
     public function routes()
     {
@@ -86,7 +102,7 @@ class Router
         return $res;
     }
 
-    public function exec()
+    private function exec()
     {
         $method = $_SERVER['REQUEST_METHOD'];
         $path = $_SERVER['REQUEST_URI'];
@@ -121,12 +137,12 @@ class Router
         throw new Exception("Route not found", 404);
     }
 
-    public function exception(callable $fn)
+    public function exception($fn)
     {
         $this->exception_cb = $fn;
     }
 
-    public function error(callable $fn)
+    public function error($fn)
     {
         $this->error_cb = $fn;
     }
@@ -139,34 +155,25 @@ class Router
                 header('Content-Type: application/json');
                 http_response_code(200);
                 echo json_encode($res);
+            } else if (is_null($res)) {
+                http_response_code(204);
             } else {
                 echo $res;
             }
         } catch (Exception $e) {
             $fn = $this->exception_cb;
-            if ($fn) {
-                call_user_func_array($fn, [$e->getMessage(), $e->getCode()]);
+            if (is_callable($fn)) {
+                call_user_func_array($fn, [$e->getMessage(), $e->getCode(), $e]);
             } else {
-                header('Content-Type: application/json');
-                http_response_code($e->getCode());
-                echo json_encode([
-                    'code' => $e->getCode(),
-                    'error' => $e->getMessage(),
-                ]);
+                throw $e;
             }
             exit;
-        } 
-        catch (Error $e) {
+        } catch (Error $e) {
             $fn = $this->error_cb;
-            if ($fn) {
-                call_user_func_array($fn, [$e->getMessage(), $e->getCode()]);
+            if (is_callable($fn)) {
+                call_user_func_array($fn, [$e->getMessage(), 500, $e]);
             } else {
-                header('Content-Type: application/json');
-                http_response_code(500);
-                echo json_encode([
-                    'code' => 500,
-                    'error' => $e->getMessage(),
-                ]);
+                throw $e;
             }
             exit;
         }

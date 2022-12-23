@@ -24,11 +24,16 @@ class Roles extends Model
                 }
             }
         }
-        return array_map(function ($role) {
+        
+        $pre_res = array_map(function ($role) {
             $role = trim($role);
             $role = strtoupper($role);
             return $role;
         }, $roles);
+
+        return array_filter($pre_res, function ($role) {
+            return !empty($role);
+        });
     }
 
     public static function set(int $user_id, $role)
