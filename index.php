@@ -11,6 +11,5 @@ $api = require __DIR__ . '/api/index.php';
 
 $router = new Router();
 $router->base('/');
-
 $router->add($api);
 $router->run();
