@@ -101,4 +101,57 @@ class Auth implements PluginDB, PluginKey
         Users::create($to_insert);
         return true;
     }
+
+    final static function getBearerToken()
+    {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+        if (!$authHeader) {
+            return null;
+        }
+        $token = explode(' ', $authHeader);
+        if (count($token) !== 2) {
+            return null;
+        }
+        return $token[1];
+    }
+
+    final static function getUser()
+    {
+        $user = Config::get('USER');
+        if (!empty($user)) {
+            return $user;
+        }
+
+        $token = self::getBearerToken();
+        if (!$token) {
+            return null;
+        }
+
+        $user = JWT::decode($token);
+
+        if (empty($user)) {
+            return null;
+        }
+
+        Config::set('USER', $user);
+        return $user;
+    }
+
+    final static function accessControl($allowed_roles = [])
+    {
+        $user = self::getUser();
+        if (empty($user) || empty($user['roles'])) {
+            throw new Exception('Unauthorized', 401);
+        }
+
+        $allowed = RolesModel::parse_roles($allowed_roles);
+        $matched = array_intersect($user['roles'], $allowed);
+
+        if (empty($matched)) {
+            throw new Exception('Forbidden', 403);
+        }
+
+        return true;
+    }
 }
