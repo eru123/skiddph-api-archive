@@ -59,4 +59,80 @@ class Request
         header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
         header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
     }
+
+    static function bodySchema(array $schema)
+    {
+        $body = self::body();
+
+        $default = [
+            'type' => 'string',
+            'required' => false,
+            'default' => null,
+        ];
+
+        foreach ($schema as $key => $opts) {
+            if (is_string($opts) || empty($opts)) {
+                $opts = ['type' => $opts];
+            }
+
+            $opts = array_merge($default, $opts);
+
+            if ($opts['required'] && !isset($body[$key])) {
+                throw new Exception("Missing required field: $key", 400);
+            } else if (!$opts['required'] && !isset($body[$key])) {
+                $body[$key] = $opts['default'];
+            }
+
+            $opts['type'] = strtolower($opts['type']);
+            if ($opts['type'] === 'string' || $opts['type'] ===  'email') {
+                $body[$key] = (string) $body[$key];
+            } else if ($opts['type'] === 'int') {
+                $body[$key] = (int) $body[$key];
+            } else if ($opts['type'] === 'float') {
+                $body[$key] = (float) $body[$key];
+            } else if ($opts['type'] === 'bool') {
+                $body[$key] = (bool) $body[$key];
+            } else if ($opts['type'] === 'array') {
+                $body[$key] = (array) $body[$key];
+            } else if ($opts['type'] === 'object') {
+                $body[$key] = (object) $body[$key];
+            } else if ($opts['type'] === 'json') {
+                $body[$key] = json_decode($body[$key], true);
+            }
+
+            if ($opts['type'] === 'string' && isset($opts['min']) && strlen($body[$key]) < $opts['min']) {
+                throw new Exception("Field $key must be at least {$opts['min']} characters long", 400);
+            }
+
+            if ($opts['type'] === 'string' && isset($opts['max']) && strlen($body[$key]) > $opts['max']) {
+                throw new Exception("Field $key must be at most {$opts['max']} characters long", 400);
+            }
+
+            if ($opts['type'] === 'string' && isset($opts['regex']) && !preg_match($opts['regex'], $body[$key])) {
+                throw new Exception("Field $key must match the regex {$opts['regex']}", 400);
+            }
+
+            if ($opts['type'] === 'email' && !filter_var($body[$key], FILTER_VALIDATE_EMAIL)) {
+                throw new Exception("Field $key must be a valid email address", 400);
+            }
+
+            if (($opts['type'] === 'int' || $opts['type'] === 'float') && isset($opts['min']) && $body[$key] < $opts['min']) {
+                throw new Exception("Field $key must be at least {$opts['min']}", 400);
+            }
+
+            if (($opts['type'] === 'int' || $opts['type'] === 'float') && isset($opts['max']) && $body[$key] > $opts['max']) {
+                throw new Exception("Field $key must be at most {$opts['max']}", 400);
+            }
+
+            if ($opts['type'] === 'array' && isset($opts['min']) && count($body[$key]) < $opts['min']) {
+                throw new Exception("Field $key must have at least {$opts['min']} items", 400);
+            }
+
+            if ($opts['type'] === 'array' && isset($opts['max']) && count($body[$key]) > $opts['max']) {
+                throw new Exception("Field $key must have at most {$opts['max']} items", 400);
+            }
+        }
+
+        return $body;
+    }
 }
