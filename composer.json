@@ -1,11 +1,13 @@
 {
     "require": {
         "vlucas/phpdotenv": "^5.5",
-        "robmorgan/phinx": "^0.13.3"
+        "robmorgan/phinx": "^0.13.3",
+        "phpmailer/phpmailer": "^6.7"
     },
     "autoload": {
         "psr-4": {
-            "Api\\": "system/"
+            "Api\\": "system/",
+            "Plugin\\": "plugins/"
         },
         "classmap": [
             "system/Core"
