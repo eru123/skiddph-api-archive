@@ -27,10 +27,10 @@ class JWT
         'HS512' => 'SHA512'
     ];
 
-    public static function decode(string $jwt): array
+    public static function decode(string $jwt, string $key = null): array
     {
         $cfg = Auth::config();
-        $key = $cfg->get(self::$cfg_key_secret);
+        $key = $key ?: $cfg->get(self::$cfg_key_secret);
         $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
 
         if (empty($key)) {
