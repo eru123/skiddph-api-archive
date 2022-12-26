@@ -37,7 +37,7 @@ class Auth implements PluginDB, PluginKey
         return Database::connect(self::config()->get('DB_ENV'));
     }
 
-    final static function login($user, string $pass, array $opts = [], array $payload_keys = [])
+    final static function login($user, string $pass, array $payload = [], array $opts = [], array $payload_keys = [])
     {
         $opts_default = [
             'ttl' => 'long',
@@ -70,11 +70,12 @@ class Auth implements PluginDB, PluginKey
 
         $expires_at = @self::config()->get('TOKEN_EXPIRE_AT')[$opts['ttl']] ?? 'now + 7days';
 
-        $payload = Arr::from($user)->pick($payload_keys)->merge([
+        $pre_payload = Arr::from($user)->pick($payload_keys)->merge([
             'iat' => 'now',
             'exp' => $expires_at,
         ])->arr();
 
+        $payload = array_merge($pre_payload, $payload);
         $token = JWT::encode($payload);
 
         return [
