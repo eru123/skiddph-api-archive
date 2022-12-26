@@ -71,6 +71,8 @@ class Request
         ];
 
         foreach ($schema as $key => $opts) {
+            $alias = @$opts['alias'] ?? $key;
+
             if (is_string($opts) || empty($opts)) {
                 $opts = ['type' => $opts];
             }
@@ -78,7 +80,7 @@ class Request
             $opts = array_merge($default, $opts);
 
             if ($opts['required'] && !isset($body[$key])) {
-                throw new Exception("Missing required field: $key", 400);
+                throw new Exception("Missing required field: $alias", 400);
             } else if (!$opts['required'] && !isset($body[$key])) {
                 $body[$key] = $opts['default'];
             }
@@ -101,35 +103,35 @@ class Request
             }
 
             if ($opts['type'] === 'string' && isset($opts['min']) && strlen($body[$key]) < $opts['min']) {
-                throw new Exception("Field $key must be at least {$opts['min']} characters long", 400);
+                throw new Exception("Field $alias must be at least {$opts['min']} characters long", 400);
             }
 
             if ($opts['type'] === 'string' && isset($opts['max']) && strlen($body[$key]) > $opts['max']) {
-                throw new Exception("Field $key must be at most {$opts['max']} characters long", 400);
+                throw new Exception("Field $alias must be at most {$opts['max']} characters long", 400);
             }
 
             if ($opts['type'] === 'string' && isset($opts['regex']) && !preg_match($opts['regex'], $body[$key])) {
-                throw new Exception("Field $key must match the regex {$opts['regex']}", 400);
+                throw new Exception("Field $alias must match the regex {$opts['regex']}", 400);
             }
 
             if ($opts['type'] === 'email' && !filter_var($body[$key], FILTER_VALIDATE_EMAIL)) {
-                throw new Exception("Field $key must be a valid email address", 400);
+                throw new Exception("Field $alias must be a valid email address", 400);
             }
 
             if (($opts['type'] === 'int' || $opts['type'] === 'float') && isset($opts['min']) && $body[$key] < $opts['min']) {
-                throw new Exception("Field $key must be at least {$opts['min']}", 400);
+                throw new Exception("Field $alias must be at least {$opts['min']}", 400);
             }
 
             if (($opts['type'] === 'int' || $opts['type'] === 'float') && isset($opts['max']) && $body[$key] > $opts['max']) {
-                throw new Exception("Field $key must be at most {$opts['max']}", 400);
+                throw new Exception("Field $alias must be at most {$opts['max']}", 400);
             }
 
             if ($opts['type'] === 'array' && isset($opts['min']) && count($body[$key]) < $opts['min']) {
-                throw new Exception("Field $key must have at least {$opts['min']} items", 400);
+                throw new Exception("Field $alias must have at least {$opts['min']} items", 400);
             }
 
             if ($opts['type'] === 'array' && isset($opts['max']) && count($body[$key]) > $opts['max']) {
-                throw new Exception("Field $key must have at most {$opts['max']} items", 400);
+                throw new Exception("Field $alias must have at most {$opts['max']} items", 400);
             }
         }
 
