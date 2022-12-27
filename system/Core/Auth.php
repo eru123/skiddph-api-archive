@@ -105,8 +105,7 @@ class Auth implements PluginDB, PluginKey
             'roles' => $roles,
         ];
         $to_insert = array_merge($data, $to_insert);
-        Users::create($to_insert);
-        return true;
+        return Users::create($to_insert);
     }
 
     final static function getBearerToken()
@@ -123,7 +122,7 @@ class Auth implements PluginDB, PluginKey
         return $token[1];
     }
 
-    final static function getUser()
+    final static function user()
     {
         $user = Config::get('USER');
         if (!empty($user)) {
@@ -147,7 +146,7 @@ class Auth implements PluginDB, PluginKey
 
     final static function accessControl($allowed_roles = [])
     {
-        $user = self::getUser();
+        $user = self::user();
         if (empty($user) || empty($user['roles'])) {
             throw new Exception('Unauthorized', 401);
         }
@@ -160,5 +159,13 @@ class Auth implements PluginDB, PluginKey
         }
 
         return true;
+    }
+
+    final static function guard()
+    {
+        $user = self::user();
+        if (empty($user)) {
+            throw new Exception('Unauthorized', 401);
+        }
     }
 }
