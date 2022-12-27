@@ -5,6 +5,7 @@ namespace Plugin\URL;
 use Request;
 use Auth;
 use Api\Auth\Email;
+use Api\Auth\Users;
 use Exception;
 
 class Controller
@@ -124,5 +125,38 @@ class Controller
         return [
             'success' => "Successfully verified email.",
         ];
+    }
+
+    static function resendEmail()
+    {
+        Auth::guard();
+        $user_id = Auth::user()['id'];
+        $user = Users::find($user_id);
+
+        $body = Request::bodySchema([
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'email',
+                'required' => true,
+            ],
+        ]);
+
+        $email = new Email();
+        $verify_id = $email->resend([
+            'user_id' => $user['id'],
+            'email' => $body['email'],
+            'type' => Email::NEW_EMAIL,
+            'user' => $user['user'],
+            'name' => $user['fname'] . ' ' . $user['lname'],
+        ]);
+
+        if ($verify_id) {
+            return [
+                'success' => "Successfully sent verification email.",
+                'verify_id' => $verify_id,
+            ];
+        }
+
+        throw new Exception('Failed to send verification email.', 500);
     }
 }
