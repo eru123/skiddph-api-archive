@@ -22,7 +22,7 @@ class Users
 {
     private static $last_error = null;
 
-    static function create(array $idata): bool
+    static function create(array $idata): int
     {
         $orm = Auth::db();
 
@@ -35,6 +35,8 @@ class Users
             'created_at' => $date,
             'updated_at' => $date,
         ];
+
+        $user_id = null;
 
         foreach ($idata as $data) {
             try {
@@ -67,11 +69,19 @@ class Users
             } catch (Exception $e) {
                 $orm->rollBack();
                 self::$last_error = $e->getMessage();
+
+                $codes = [
+                    '23000' => 'User already exists.'
+                ];
+
+                if (isset($codes[$e->getCode()])) {
+                    throw new QueryError($codes[$e->getCode()], 400, $e);
+                }
+
                 throw new QueryError($e->getMessage(), $e->getCode(), $e);
             }
         }
-
-        return true;
+        return $user_id;
     }
 
     static function update($id, array $data): bool

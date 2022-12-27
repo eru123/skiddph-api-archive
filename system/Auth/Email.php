@@ -7,6 +7,8 @@ use Api\Lib\Rand;
 use Auth;
 use SMTP;
 use Api\Auth\Model\Email as EmailModel;
+use Api\Auth\Model\Info as InfoModel;
+use Api\Database\Helper;
 use Exception;
 
 class Email
@@ -14,7 +16,7 @@ class Email
     private $smtp_key = 'default';
     const NEW_EMAIL = 'NEW_EMAIL';
     const RESET_PASSWORD = 'RESET_PASSWORD';
-    public static function use (string $key): self
+    public static function use(string $key): self
     {
         return new self($key);
     }
@@ -59,13 +61,15 @@ class Email
         }
 
         try {
-            $smtp = SMTP::use ($this->smtp_key);
+            $smtp = SMTP::use($this->smtp_key);
             $smtp->to($opts['email']);
             $smtp->subject('Email Verification');
-            $smtp->text('Your verification code is: ' . $code);
+            $msg = !empty(@$opts['name']) ? 'Hi ' . $opts['name'] . ', ' : 'Hi, ';
+            $msg .= !empty(@$opts['user']) ? 'with username @' . $opts['user'] . ', ' : '';
+            $msg .= 'your verification code is ' . $code . '.';
+            $smtp->text($msg);
             $smtp->send();
             return $verify_id;
-
         } catch (Exception $e) {
             throw new Exception('Failed to send verification code', 500);
         }
@@ -84,14 +88,43 @@ class Email
             throw new Exception('Invalid verification step', 401);
         }
 
+
         try {
             $decoded = JWT::decode($verify['token']);
         } catch (Exception $e) {
             throw new Exception('Verification Expired', 401);
-        }  
+        }
 
         if (intval($decoded['code']) - intval($code) !== 0 || empty(intval($decoded['code'])) || $type != $decoded['type']) {
             throw new Exception('Invalid verification code', 401);
+        }
+
+        $orm = Auth::db();
+
+        try {
+            $orm->begin();
+            $affected = $orm->table(InfoModel::TB)
+                ->where(['user_id' => $user_id])
+                ->and()
+                ->where(['name' => $orm->quote('pending_email')])
+                ->and()
+                ->where(['value' => $orm->quote(Helper::jsonEncode($decoded['email']))])
+                ->data([
+                    [
+                        'name' => 'email'
+                    ]
+                ])
+                ->update()
+                ->rowCount();
+
+            if (!$affected) {
+                throw new Exception('Invalid verification email', 400);
+            }
+
+            $orm->commit();
+        } catch (Exception $e) {
+            $orm->rollback();
+            throw new Exception('Failed to verify email', 500);
         }
 
         return true;
