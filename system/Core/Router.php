@@ -24,7 +24,7 @@ class Router
         $this->error_cb = $default_callback;
     }
 
-    public function routes()
+    public function routes(): array
     {
         return $this->routes;
     }
