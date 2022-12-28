@@ -93,7 +93,6 @@ class Controller
                 'type' => 'string',
                 'min' => 5,
                 'max' => 24,
-                'regex' => '/^[a-zA-Z0-9_]+$/',
                 'required' => true,
             ],
             'pass' => [
