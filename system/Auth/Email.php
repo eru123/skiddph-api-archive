@@ -164,4 +164,82 @@ class Email
 
         return $verify['id'];
     }
+
+    public static function exists($email)
+    {
+        $orm = Auth::db();
+        $user = $orm->table(InfoModel::TB)
+            ->where(['name' => $orm->quote('email')])
+            ->and()
+            ->where(['value' => $orm->quote(Helper::jsonEncode($email))])
+            ->readOne()
+            ->arr();
+
+        if (empty($user)) {
+            return FALSE;
+        }
+
+        return $user['user_id'];
+    }
+
+    public function addEmail($user, $email)
+    {
+        if (empty($user)) {
+            throw new Exception('Invalid user', 400);
+        }
+
+        $orm = Auth::db();
+
+        if (is_array($user)) {
+            $user_id = $user['id'];
+        } else {
+            $user_id = $user;
+            $user = null;
+        }
+
+        try {
+            $orm->begin();
+            $affected = $orm->table(InfoModel::TB)
+                ->data([
+                    [
+                        'user_id' => $user_id,
+                        'name' => 'pending_email',
+                        'value' => Helper::jsonEncode($email)
+                    ]
+                ])
+                ->insert()
+                ->rowCount();
+
+            if (!$affected) {
+                throw new Exception('Failed to add email', 500);
+            }
+
+            if (empty($user)) {
+                $user = Users::find($user_id);
+
+                if (empty($user)) {
+                    throw new Exception('Invalid user', 400);
+                }
+            }
+            
+            $orm->commit();
+        } catch (Exception $e) {
+            $orm->rollback();
+            throw new Exception('Failed to add email'.$e->getMessage(), 500);
+        }
+
+        $verify_id = $this->code([
+            'user_id' => $user_id,
+            'email' => $email,
+            'type' => self::NEW_EMAIL,
+            'user' => $user['user'],
+            'name' => trim(@$user['fname'] . ' ' . @$user['lname']) ?? "User",
+        ]);
+
+        if (empty($verify_id)) {
+            throw new Exception('Email added but failed to send verification code', 500);
+        }
+
+        return $verify_id;
+    }
 }
