@@ -9,7 +9,7 @@ final class AuthUsersInfo extends AbstractMigration
     public function change()
     {
         $table = $this->table('auth_users_info');
-        $table->addColumn('parent_id', 'integer', ['null' => true])
+        $table->addColumn('parent_id', 'integer', ['null' => false, 'default' => 0])
             ->addColumn('user_id', 'integer', ['null' => false])
             ->addColumn('name', 'string', ['limit' => 255, 'null' => false])
             ->addColumn('value', 'string', ['limit' => 255, 'null' => true])
