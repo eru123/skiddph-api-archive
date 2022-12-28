@@ -86,6 +86,42 @@ class Auth implements PluginDB, PluginKey
         ];
     }
 
+    final static function directLoginWithID($id, array $payload = [], array $opts = [], array $payload_keys = [])
+    {
+        $opts_default = [
+            'ttl' => 'long',
+        ];
+
+        $opts = array_merge($opts_default, $opts);
+        $user = null;
+
+        try {
+            $user = Users::find($id, true, true);
+        } catch (Exception $e) {
+            throw new Error('Failed to direct login', 500);
+        }
+
+        $payload_keys_default = ['id', 'user', 'roles'];
+        $payload_keys = array_merge($payload_keys_default, $payload_keys);
+
+        $expires_at = @self::config()->get('TOKEN_EXPIRE_AT')[$opts['ttl']] ?? 'now + 7days';
+
+        $pre_payload = Arr::from($user)->pick($payload_keys)->merge([
+            'iat' => 'now',
+            'exp' => $expires_at,
+        ])->arr();
+
+        $payload = array_merge($pre_payload, $payload);
+        $token = JWT::encode($payload);
+
+        return [
+            "success" => true,
+            'data' => $user,
+            'token' => $token,
+            'refresh_token' => JWT::issue_refresh($token),
+        ];
+    }
+
     final static function refreshToken(string $token, string $refresh_token)
     {
         $token = JWT::refresh($token, $refresh_token);
