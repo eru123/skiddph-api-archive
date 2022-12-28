@@ -2,6 +2,7 @@
 
 namespace Api\Auth;
 
+use Api\Auth\Model\Info;
 use Request;
 use Auth;
 use Exception;
@@ -120,7 +121,7 @@ class Controller
         $email = new Email();
         $email->verify($verify_id, $user['id'], $code, Email::NEW_EMAIL);
         $login = Auth::directLoginWithID($user['id'], [], [], ['email']);
-        
+
         return array_merge($login, [
             'success' => "Successfully verified email.",
         ]);
@@ -157,5 +158,40 @@ class Controller
         }
 
         throw new Exception('Failed to send verification email.', 500);
+    }
+
+    static function addEmail()
+    {
+        Auth::guard();
+        $user_id = Auth::user()['id'];
+        $user = Users::find($user_id);
+        $pending_email = is_array(@$user['pending_email']) ? $user['pending_email'] : (@$user['pending_email'] ? [$user['pending_email']] : []);
+
+        $body = Request::bodySchema([
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'email',
+                'required' => true,
+            ],
+        ]);
+
+        $email_exists = Email::exists($body['email']);
+        if (in_array($body['email'], $pending_email)) {
+            throw new Exception('Email already is use.', 400);
+        } else if ($email_exists !== FALSE) {
+            if ($email_exists == $user_id) {
+                throw new Exception('Email already is use.', 400);
+            }
+
+            throw new Exception('Email already exists.', 400);
+        }
+
+        $email = new Email();
+        $verify_id = $email->addEmail($user, $body['email']);
+
+        return [
+            'success' => "Successfully sent verification email.",
+            'verify_id' => $verify_id,
+        ];
     }
 }

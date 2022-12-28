@@ -99,9 +99,7 @@ class Info
             ])
             ->and()
             ->where([
-                'a.parent_id' => [
-                    'IS' => 'NULL'
-                ]
+                'a.parent_id' => 0
             ])
             ->order('a.id', 'ASC')
             ->order('a.updated_at', 'DESC')
@@ -216,9 +214,7 @@ class Info
                     ])
                     ->and()
                     ->where([
-                        'parent_id' => [
-                            'IS' => 'NULL'
-                        ]
+                        'parent_id' => 0
                     ])
                     ->readOne()
                     ->arr();
