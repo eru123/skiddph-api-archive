@@ -99,7 +99,7 @@ class Controller
             ],
         ]);
 
-        return Auth::login($body['user'], $body['pass']);
+        return Auth::login($body['user'], $body['pass'], [], [], ['email']);
     }
 
     static function verifyEmail($params)
@@ -119,10 +119,11 @@ class Controller
         $code = $body['code'];
         $email = new Email();
         $email->verify($verify_id, $user['id'], $code, Email::NEW_EMAIL);
-
-        return [
+        $login = Auth::directLoginWithID($user['id'], [], [], ['email']);
+        
+        return array_merge($login, [
             'success' => "Successfully verified email.",
-        ];
+        ]);
     }
 
     static function resendEmail()
