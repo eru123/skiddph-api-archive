@@ -221,11 +221,11 @@ class Email
                     throw new Exception('Invalid user', 400);
                 }
             }
-            
+
             $orm->commit();
         } catch (Exception $e) {
             $orm->rollback();
-            throw new Exception('Failed to add email'.$e->getMessage(), 500);
+            throw new Exception('Failed to add email', 500);
         }
 
         $verify_id = $this->code([
@@ -241,5 +241,44 @@ class Email
         }
 
         return $verify_id;
+    }
+
+    public function removeEmail($user, $email)
+    {
+        if (empty($user)) {
+            throw new Exception('Invalid user', 400);
+        }
+
+        $orm = Auth::db();
+
+        if (is_array($user)) {
+            $user_id = $user['id'];
+        } else {
+            $user_id = $user;
+            $user = null;
+        }
+
+        try {
+            $orm->begin();
+            $affected = $orm->table(InfoModel::TB)
+                ->where(['user_id' => $user_id])
+                ->and()
+                ->where(['value' => $orm->quote(Helper::jsonEncode($email))])
+                ->and()
+                ->where(['name' => ['IN' => [$orm->quote('email'), $orm->quote('pending_email')]]])
+                ->delete()
+                ->rowCount();
+
+            if (!$affected) {
+                throw new Exception('Failed to remove email', 500);
+            }
+
+            $orm->commit();
+        } catch (Exception $e) {
+            $orm->rollback();
+            throw new Exception('Failed to remove email' . $e->getMessage() . '>>:' . $orm->getLastQuery(), 500);
+        }
+
+        return true;
     }
 }
