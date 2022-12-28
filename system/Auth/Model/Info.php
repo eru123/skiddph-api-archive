@@ -300,11 +300,11 @@ class Info
             $user = $orm->table(self::TB)
                 ->select('user_id')
                 ->where([
-                    'name' => $name
+                    'name' => $orm->quote($name)
                 ])
                 ->and()
                 ->where([
-                    'value' => $value
+                    'value' => $orm->quote(Helper::jsonEncode($value))
                 ])
                 ->readOne()
                 ->arr();
