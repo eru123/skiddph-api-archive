@@ -194,4 +194,25 @@ class Controller
             'verify_id' => $verify_id,
         ];
     }
+
+    static function removeEmail()
+    {
+        Auth::guard();
+        $user_id = Auth::user()['id'];
+
+        $body = Request::bodySchema([
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'email',
+                'required' => true,
+            ],
+        ]);
+
+        $email = new Email();
+        $email->removeEmail($user_id, $body['email']);
+
+        return [
+            'success' => "Successfully removed email.",
+        ];
+    }
 }
