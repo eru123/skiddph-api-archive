@@ -47,9 +47,18 @@ class Auth implements PluginDB, PluginKey
 
         $orm = self::db();
 
-        $user = Users::find(is_numeric($user) ? $user : [
-            'user' => $orm->quote($user),
-        ], false, false);
+        if (preg_match('/^(.*)@(.*)\.(.*)$/', $user)) {
+            $user_id = InfoModel::find(['email' => $user]);
+            $user = null;
+            
+            if (!empty($user_id)) {
+                $user = Users::find($user_id, false, false);
+            }
+        } else {
+            $user = Users::find(is_numeric($user) ? $user : [
+                'user' => $orm->quote($user),
+            ], false, false);
+        }
 
         if (empty($user)) {
             throw new Exception('Invalid credentials', 401);
