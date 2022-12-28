@@ -1,27 +1,13 @@
 <?php
 
+use Api\Auth\Controller;
+
 $router = new Router();
 $router->base('/auth');
 
-$router->get('/user/{id}/edit', function ($p) {
-    Auth::accessControl('superadmin,admin');
-    return [
-        'id' => $p['id'],
-        'name' => 'John Doe',
-    ];
-});
-
-$router->post('/signin', function () {
-    $body = Request::bodySchema([
-        'user' => [
-            'required' => true,
-        ],
-        'pass' => [
-            'required' => true,
-        ],
-    ]);
-
-    return Auth::login($body['user'], $body['pass']);
-});
+$router->post('/signin', [Controller::class, 'signin']);
+$router->post('/signup', [Controller::class, 'signup']);
+$router->post('/verify/resend/email', [Controller::class, 'resendEmail']);
+$router->post('/verify/email/{verifyId}', [Controller::class, 'verifyEmail']);
 
 return $router;
