@@ -284,6 +284,21 @@ class Users
         return true;
     }
 
+    static function removeRole($user_id, $roles)
+    {
+        if (empty($roles)) {
+            throw new Exception("Invalid role.", 400);
+        }
+
+        $remove = ModelRoles::remove($user_id, $roles);
+
+        if (!$remove || $remove === 0) {
+            throw new Exception("Failed to remove role.", 500);
+        }
+
+        return true;
+    }
+
     public static function lastError(): ?string
     {
         return self::$last_error;
