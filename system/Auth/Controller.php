@@ -223,8 +223,7 @@ class Controller
     {
         Auth::guard();
         $user_id = Auth::user()['id'];
-        $user = Users::find($user_id);
-
+        
         $body = Request::bodySchema([
             'user' => [
                 'alias' => 'Username',
@@ -236,7 +235,6 @@ class Controller
         ]);
 
         $username = $body['user'];
-
         Users::changeUsername($user_id, $username);
 
         return [
