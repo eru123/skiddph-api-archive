@@ -145,7 +145,7 @@ class ORM extends Helper
         if (!isset($this->query[$key])) {
             $this->query[$key] = [];
         }
-        $this->query[$key][] = self::function ($function, $column, $alias);
+        $this->query[$key][] = self::function($function, $column, $alias);
         $this->lastQueryKey = $key;
         return $this;
     }
@@ -276,7 +276,7 @@ class ORM extends Helper
      * OR
      * @return self
      */
-    public function or (): self
+    public function or(): self
     {
         $allowed = ['where', 'on', 'having'];
         if (in_array($this->lastQueryKey, $allowed)) {
@@ -293,7 +293,7 @@ class ORM extends Helper
      * AND
      * @return self
      */
-    public function and (): self
+    public function and(): self
     {
         $allowed = ['where', 'on', 'having'];
         if (in_array($this->lastQueryKey, $allowed)) {
@@ -735,5 +735,15 @@ class ORM extends Helper
     public function f(string $query, ...$params): Inject
     {
         return new Inject($this->pdo, $query, ...$params);
+    }
+
+    /**
+     * Clear query
+     * @return self
+     */
+    public function clear(): self
+    {
+        $this->query = [];
+        return $this;
     }
 }
