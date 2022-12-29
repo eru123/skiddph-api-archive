@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <form>
+        <input type="file" name="file" id="file">
+        <input type="hidden" name="id" value="1">
+        <button type="submit">Submit</button>
+    </form>
+    <script>
+        const form = document.querySelector('form');
+        const uploadUrl = 'http://localhost/api/v1/fileuploader/upload'
+        const token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwicm9sZXMiOlsiU1VQRVJBRE1JTiJdLCJlbWFpbCI6Inllb2xpZ29ha2lub0BnbWFpbC5jb20iLCJpYXQiOjE2NzIzMDgwODksImV4cCI6MTY3MjM5NDQ4OX0.JMDiqiEqk4WwzkpVxmCi0SMI6RRS756v64MqKd6-wek"
+
+        // form input id will be send in json data, file will be send as file, send request with Bearer token
+    </script>
+</body>
+
+</html>
