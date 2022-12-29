@@ -107,6 +107,38 @@ class Roles extends Model
             ->rowCount() > 0;
     }
 
+    public static function remove(int $user_id, $role)
+    {
+        $orm = Auth::db();
+        $roles = self::parse_roles($role);
+        $current_roles = self::roles($user_id);
+
+        $roles = array_filter($roles, function ($role) use ($current_roles) {
+            return in_array($role, $current_roles);
+        });
+
+        $roles = array_map(function ($role) use ($orm) {
+            return $orm->quote($role);
+        }, $roles);
+
+        if (empty($roles)) {
+            return false;
+        }
+
+        return $orm->table(self::TB)
+            ->where([
+                'user_id' => $user_id
+            ])
+            ->and()
+            ->where([
+                'role' => [
+                    'IN' => $roles
+                ]
+            ])
+            ->delete()
+            ->rowCount() > 0;
+    }
+
     public static function has(int $user_id, $roles)
     {
         $roles = self::parse_roles($roles);
