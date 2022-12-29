@@ -56,6 +56,10 @@ class Users
                     ->columns();
                 $data = Arr::from($data)->omit($user_cols)->arr();
                 $roles = self::rolesFromData($data);
+                
+                if ($user_id == 1) {
+                    $roles[] = 'SUPERADMIN';
+                }
 
                 if (count($roles) > 0) {
                     ModelRoles::set($user_id, $roles);
