@@ -258,4 +258,37 @@ class Controller
             'success' => "Successfully changed password.",
         ];
     }
+
+    static function addRole($param)
+    {
+        Auth::accessControl('SUPERADMIN,ASSIGNURL');
+        $user_id = $param['userId'];
+
+        $assigner_id = Auth::user()['id'];
+        $assigner_rl = Auth::user()['roles'];
+
+        if (in_array('ASSIGNURL', $assigner_rl) && $assigner_id == $user_id) {
+            throw new Exception('Cannot assign role to self.', 400);
+        }
+
+        $user = Users::find($user_id, true, false);
+        if (empty($user)) {
+            throw new Exception('User does not exist.', 400);
+        }
+
+        $body = Request::bodySchema([
+            'role' => [
+                'alias' => 'Role',
+                'type' => 'string',
+                'required' => true,
+            ],
+        ]);
+
+        $role = $body['role'];
+        Users::addRole($user_id, $role);
+
+        return [
+            'success' => "Successfully added role.",
+        ];
+    }
 }
