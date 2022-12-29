@@ -2,7 +2,6 @@
 
 namespace Api\Auth;
 
-use Api\Auth\Model\Info;
 use Request;
 use Auth;
 use Exception;
@@ -223,7 +222,7 @@ class Controller
     {
         Auth::guard();
         $user_id = Auth::user()['id'];
-        
+
         $body = Request::bodySchema([
             'user' => [
                 'alias' => 'Username',
