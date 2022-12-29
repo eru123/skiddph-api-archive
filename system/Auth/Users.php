@@ -56,7 +56,7 @@ class Users
                     ->columns();
                 $data = Arr::from($data)->omit($user_cols)->arr();
                 $roles = self::rolesFromData($data);
-                
+
                 if ($user_id == 1) {
                     $roles[] = 'SUPERADMIN';
                 }
@@ -228,7 +228,7 @@ class Users
         return true;
     }
 
-    public static function changePassword($user_id, $password)
+    static function changePassword($user_id, $password)
     {
         $user = ModelUsers::user($user_id);
         if (empty($user)) {
@@ -264,6 +264,21 @@ class Users
         } catch (Exception $e) {
             $orm->rollBack();
             throw new QueryError("Failed to change password", 500, $e);
+        }
+
+        return true;
+    }
+
+    static function addRole($user_id, $roles)
+    {
+        if (empty($roles)) {
+            throw new Exception("Invalid role.", 400);
+        }
+
+        $add = ModelRoles::add($user_id, $roles);
+
+        if (!$add || $add === 0) {
+            throw new Exception("Failed to add role.", 500);
         }
 
         return true;
