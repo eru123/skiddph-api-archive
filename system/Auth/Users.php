@@ -165,7 +165,7 @@ class Users
 
         if ($filter) {
             $user = array_filter($user, function ($key) {
-                return !in_array($key, ['last_hash', 'last_user', 'hash', 'updated_at', 'status']);
+                return !in_array($key, ['user', 'last_hash', 'last_user', 'hash', 'updated_at', 'status']);
             }, ARRAY_FILTER_USE_KEY);
         }
 
@@ -174,6 +174,54 @@ class Users
             $user = array_merge($user, ModelInfo::info($user['id']) ?? []);
         }
         return $user;
+    }
+
+    static function changeUsername($user_id, $username)
+    {
+        $user = ModelUsers::user($user_id);
+        if (empty($user)) {
+            throw new QueryError("User not found.", 404);
+        }
+
+        $old_user = $user['user'];
+
+        if ($old_user == $username) {
+            throw new QueryError("Username already in use.", 400);
+        }
+
+        try {
+            $orm = Auth::db();
+            $orm->begin();
+
+            ModelUsers::set(['last_user' => $orm->quote($old_user)], ['last_user' => '']);
+            ModelUsers::set(['last_user' => $orm->quote($username)], ['last_user' => '']);
+
+            if (
+                !ModelUsers::set($user_id, [
+                    'user' => $username,
+                    'last_user' => $old_user,
+                    'updated_at' => Date::parse("now", 'datetime')
+                ])
+            ) {
+                throw new QueryError("Failed to change username.", 500);
+            }
+
+            $orm->commit();
+        } catch (Exception $e) {
+            $orm->rollBack();
+
+            $codes = [
+                '23000' => 'Username already in use.'
+            ];
+
+            if (isset($codes[$e->getCode()])) {
+                throw new QueryError($codes[$e->getCode()], 400, $e);
+            }
+
+            throw new QueryError("Failed to change username", 500, $e);
+        }
+
+        return true;
     }
 
     public static function lastError(): ?string
