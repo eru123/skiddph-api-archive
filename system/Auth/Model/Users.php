@@ -36,4 +36,13 @@ class Users extends Model
             ->arr();
         return empty($users) ? [] : $users;
     }
+
+    public static function set($user, $data)
+    {
+        return Auth::db()->table(self::TB)
+            ->where(is_array($user) ? $user : ['id' => $user])
+            ->data([$data])
+            ->update()
+            ->rowCount() > 0;
+    }
 }
