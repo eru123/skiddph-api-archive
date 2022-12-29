@@ -6,7 +6,10 @@ use PluginKey;
 use PluginDB;
 use PluginConfig;
 use Database;
+use Auth;
+use Exception;
 
+use Api\Lib\Date;
 use Api\Database\ORM;
 
 class Plugin implements PluginKey, PluginDB
@@ -35,5 +38,53 @@ class Plugin implements PluginKey, PluginDB
     public static function tb(): ORM
     {
         return self::db()->clear()->table(self::TB);
+    }
+
+    public static function s3BucketConfig(): array
+    {
+        return self::config()->get('S3_BUCKET');
+    }
+
+    public static function getConnector(): string
+    {
+        return self::config()->get('CONNECTOR');
+    }
+
+    public static function upload()
+    {
+        $user = Auth::user();
+
+        if (empty($_FILES)) {
+            throw new Exception("No file uploaded");
+        }
+
+        $file_objs = [];
+        foreach ($_FILES as $file) {
+            if (!is_array($file['error'])) {
+                foreach ($file as $key => $value) {
+                    $file[$key] = [$value];
+                }
+            }
+            foreach ($file['error'] as $i => $error) {
+                $file_obj = [];
+                if ($error === UPLOAD_ERR_OK) {
+                    $file_obj['name'] = $file['name'][$i];
+                    $file_obj['mime'] = $file['type'][$i];
+                    $file_obj['tmp_name'] = $file['tmp_name'][$i];
+                    $file_obj['error'] = $file['error'][$i];
+                    $file_obj['size'] = $file['size'][$i];
+                    $file_obj['full_path'] = @$file['full_path'][$i];
+                    $file_obj['user_id'] = $user['id'];
+                    $file_obj['date'] = Date::parse('now');
+                    $file_obj['hash'] = md5_file($file_obj['tmp_name']);
+                    $file_objs[] = $file_obj;
+                } else {
+                    throw new Exception("Error uploading file");
+                }
+            }
+        }
+
+        $connector = self::getConnector();
+        $uploaded = $connector::upload($file_objs);
     }
 }
