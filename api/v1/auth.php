@@ -17,4 +17,6 @@ $router->post('/user/change/password', [Controller::class, 'changePassword']);
 
 // ASSIGNROLE
 $router->post('/user/{userId}/add/role', [Controller::class, 'addRole']);
+$router->post('/user/{userId}/remove/role', [Controller::class, 'removeRole']);
+
 return $router;
