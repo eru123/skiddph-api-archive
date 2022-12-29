@@ -240,4 +240,26 @@ class Controller
             'success' => "Successfully changed username.",
         ];
     }
+
+    static function changePassword()
+    {
+        Auth::guard();
+        $user_id = Auth::user()['id'];
+
+        $body = Request::bodySchema([
+            'pass' => [
+                'alias' => 'Password',
+                'type' => 'string',
+                'min' => 8,
+                'required' => true,
+            ],
+        ]);
+
+        $password = $body['pass'];
+        Users::changePassword($user_id, $password);
+
+        return [
+            'success' => "Successfully changed password.",
+        ];
+    }
 }
