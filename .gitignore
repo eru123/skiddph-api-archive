@@ -3,3 +3,4 @@ composer.phar
 .github/sftp.json
 .env
 .vscode/sftp.json
+/uploads
