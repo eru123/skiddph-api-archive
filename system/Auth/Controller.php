@@ -2,7 +2,6 @@
 
 namespace Api\Auth;
 
-use Api\Auth\Model\Info;
 use Request;
 use Auth;
 use Exception;
@@ -53,15 +52,11 @@ class Controller
         unset($body['user']);
         unset($body['pass']);
 
-        $roles = [
-            'URLGENERATOR'
-        ];
-
         if (Email::exists($body['pending_email']) !== FALSE) {
             throw new Exception('Email already exists.', 400);
         }
 
-        $user_id = Auth::register($username, $password, $roles, $body);
+        $user_id = Auth::register($username, $password, [], $body);
 
         $email = new Email();
         $verify_id = $email->code([
@@ -223,7 +218,7 @@ class Controller
     {
         Auth::guard();
         $user_id = Auth::user()['id'];
-        
+
         $body = Request::bodySchema([
             'user' => [
                 'alias' => 'Username',
@@ -239,6 +234,89 @@ class Controller
 
         return [
             'success' => "Successfully changed username.",
+        ];
+    }
+
+    static function changePassword()
+    {
+        Auth::guard();
+        $user_id = Auth::user()['id'];
+
+        $body = Request::bodySchema([
+            'pass' => [
+                'alias' => 'Password',
+                'type' => 'string',
+                'min' => 8,
+                'required' => true,
+            ],
+        ]);
+
+        $password = $body['pass'];
+        Users::changePassword($user_id, $password);
+
+        return [
+            'success' => "Successfully changed password.",
+        ];
+    }
+
+    static function addRole($param)
+    {
+        Auth::accessControl('SUPERADMIN,ASSIGNURL');
+        $user_id = $param['userId'];
+
+        $assigner_id = Auth::user()['id'];
+        $assigner_rl = Auth::user()['roles'];
+
+        if (in_array('ASSIGNURL', $assigner_rl) && $assigner_id == $user_id) {
+            throw new Exception('Cannot assign role to self.', 400);
+        }
+
+        $user = Users::find($user_id, true, false);
+        if (empty($user)) {
+            throw new Exception('User does not exist.', 400);
+        }
+
+        $body = Request::bodySchema([
+            'role' => [
+                'alias' => 'Role',
+                'type' => 'string',
+                'required' => true,
+            ],
+        ]);
+
+        $role = $body['role'];
+        Users::addRole($user_id, $role);
+
+        return [
+            'success' => "Successfully added role.",
+        ];
+    }
+
+    static function removeRole($param)
+    {
+        Auth::accessControl('SUPERADMIN,ASSIGNURL');
+        $user_id = $param['userId'];
+
+        $assigner_id = Auth::user()['id'];
+        $assigner_rl = Auth::user()['roles'];
+
+        if (in_array('ASSIGNURL', $assigner_rl) && $assigner_id == $user_id) {
+            throw new Exception('Cannot remove role from self.', 400);
+        }
+
+        $body = Request::bodySchema([
+            'role' => [
+                'alias' => 'Role',
+                'type' => 'string',
+                'required' => true,
+            ],
+        ]);
+
+        $role = $body['role'];
+        Users::removeRole($user_id, $role);
+
+        return [
+            'success' => "Successfully removed role.",
         ];
     }
 }

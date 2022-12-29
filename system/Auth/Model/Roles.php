@@ -23,8 +23,12 @@ class Roles extends Model
                     break;
                 }
             }
+
+            if (!is_array($roles)) {
+                $roles = [$roles];
+            }
         }
-        
+
         $pre_res = array_map(function ($role) {
             $role = trim($role);
             $role = strtoupper($role);
@@ -65,12 +69,12 @@ class Roles extends Model
         $roles = Auth::db()->table(self::TB)
             ->select('GROUP_CONCAT(ROLE)', 'roles')
             ->where([
-                'user_id' => 1
+                'user_id' => $user_id
             ])
             ->readOne()
             ->arr();
 
-        if (empty($roles)) {
+        if (empty($roles) || empty($roles['roles'])) {
             return [];
         }
 
@@ -80,6 +84,12 @@ class Roles extends Model
     public static function add(int $user_id, $role)
     {
         $roles = self::parse_roles($role);
+        $current_roles = self::roles($user_id);
+
+        $roles = array_filter($roles, function ($role) use ($current_roles) {
+            return !in_array($role, $current_roles);
+        });
+
         $roles = array_map(function ($role) use ($user_id) {
             return [
                 'user_id' => $user_id,
@@ -87,9 +97,45 @@ class Roles extends Model
             ];
         }, $roles);
 
+        if (empty($roles)) {
+            return false;
+        }
+
         return Auth::db()->table(self::TB)
             ->data($roles)
-            ->upsert()
+            ->insert()
+            ->rowCount() > 0;
+    }
+
+    public static function remove(int $user_id, $role)
+    {
+        $orm = Auth::db();
+        $roles = self::parse_roles($role);
+        $current_roles = self::roles($user_id);
+
+        $roles = array_filter($roles, function ($role) use ($current_roles) {
+            return in_array($role, $current_roles);
+        });
+
+        $roles = array_map(function ($role) use ($orm) {
+            return $orm->quote($role);
+        }, $roles);
+
+        if (empty($roles)) {
+            return false;
+        }
+
+        return $orm->table(self::TB)
+            ->where([
+                'user_id' => $user_id
+            ])
+            ->and()
+            ->where([
+                'role' => [
+                    'IN' => $roles
+                ]
+            ])
+            ->delete()
             ->rowCount() > 0;
     }
 

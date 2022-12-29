@@ -163,7 +163,7 @@ class Router
         } catch (Exception $e) {
             $fn = $this->exception_cb;
             if (is_callable($fn)) {
-                call_user_func_array($fn, [$e->getMessage(), $e->getCode(), $e]);
+                call_user_func_array($fn, [$e->getMessage(), (int) $e->getCode(), $e]);
             } else {
                 throw $e;
             }
