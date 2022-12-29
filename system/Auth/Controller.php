@@ -218,4 +218,27 @@ class Controller
             'success' => "Successfully removed email.",
         ];
     }
+
+    static function changeUsername()
+    {
+        Auth::guard();
+        $user_id = Auth::user()['id'];
+        
+        $body = Request::bodySchema([
+            'user' => [
+                'alias' => 'Username',
+                'type' => 'string',
+                'min' => 5,
+                'max' => 24,
+                'required' => true,
+            ],
+        ]);
+
+        $username = $body['user'];
+        Users::changeUsername($user_id, $username);
+
+        return [
+            'success' => "Successfully changed username.",
+        ];
+    }
 }
