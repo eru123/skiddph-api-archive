@@ -52,15 +52,11 @@ class Controller
         unset($body['user']);
         unset($body['pass']);
 
-        $roles = [
-            'URLGENERATOR'
-        ];
-
         if (Email::exists($body['pending_email']) !== FALSE) {
             throw new Exception('Email already exists.', 400);
         }
 
-        $user_id = Auth::register($username, $password, $roles, $body);
+        $user_id = Auth::register($username, $password, [], $body);
 
         $email = new Email();
         $verify_id = $email->code([
