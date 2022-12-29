@@ -40,5 +40,9 @@ return [
         "SECRET" => @$_ENV['GOOGLE_CLIENT_SECRET'],
         "REDIRECT_URI" => @$_ENV['GOOGLE_REDIRECT_URI'],
         "SCOPE" => "https://www.googleapis.com/auth/drive"
+    ],
+    'FILE_UPLOADER' => [
+        'DB_ENV' => 'default',
+        'UPLOAD_DIR' => __DIR__ . '/uploads',
     ]
 ];
