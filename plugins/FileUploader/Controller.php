@@ -9,12 +9,7 @@ class Controller
 {
     public static function upload()
     {
-        $body = Request::body();
-        return [
-            'body' => $body,
-            'post' => $_POST,
-            'files' => $_FILES,
-            'token' => Auth::getBearerToken(),
-        ];
+        Auth::guard();
+        return $_FILES;
     }
 }
