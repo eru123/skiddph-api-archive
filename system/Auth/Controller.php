@@ -291,4 +291,32 @@ class Controller
             'success' => "Successfully added role.",
         ];
     }
+
+    static function removeRole($param)
+    {
+        Auth::accessControl('SUPERADMIN,ASSIGNURL');
+        $user_id = $param['userId'];
+
+        $assigner_id = Auth::user()['id'];
+        $assigner_rl = Auth::user()['roles'];
+
+        if (in_array('ASSIGNURL', $assigner_rl) && $assigner_id == $user_id) {
+            throw new Exception('Cannot remove role from self.', 400);
+        }
+
+        $body = Request::bodySchema([
+            'role' => [
+                'alias' => 'Role',
+                'type' => 'string',
+                'required' => true,
+            ],
+        ]);
+
+        $role = $body['role'];
+        Users::removeRole($user_id, $role);
+
+        return [
+            'success' => "Successfully removed role.",
+        ];
+    }
 }
