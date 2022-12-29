@@ -224,6 +224,47 @@ class Users
         return true;
     }
 
+    public static function changePassword($user_id, $password)
+    {
+        $user = ModelUsers::user($user_id);
+        if (empty($user)) {
+            throw new QueryError("User not found.", 404);
+        }
+
+        $old_hash = $user['hash'];
+        $last_hash = $user['last_hash'];
+
+        if (Password::verify($password, $last_hash)) {
+            throw new QueryError("Cannot use old password.", 400);
+        }
+
+        if (Password::verify($password, $old_hash)) {
+            throw new QueryError("Cannot use current password.", 400);
+        }
+
+        try {
+            $orm = Auth::db();
+            $orm->begin();
+
+            if (
+                !ModelUsers::set($user_id, [
+                    'hash' => Password::hash($password),
+                    'last_hash' => $old_hash,
+                    'updated_at' => Date::parse("now", 'datetime')
+                ])
+            ) {
+                throw new QueryError("Failed to change password.", 500);
+            }
+
+            $orm->commit();
+        } catch (Exception $e) {
+            $orm->rollBack();
+            throw new QueryError("Failed to change password", 500, $e);
+        }
+
+        return true;
+    }
+
     public static function lastError(): ?string
     {
         return self::$last_error;
