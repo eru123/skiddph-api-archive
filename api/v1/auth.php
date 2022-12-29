@@ -12,4 +12,5 @@ $router->post('/verify/email/{verifyId}', [Controller::class, 'verifyEmail']);
 $router->post('/user/add/email', [Controller::class, 'addEmail']);
 $router->post('/user/remove/email', [Controller::class, 'removeEmail']);
 $router->post('/user/change/user', [Controller::class, 'changeUsername']);
+$router->post('/user/change/password', [Controller::class, 'changePassword']);
 return $router;
