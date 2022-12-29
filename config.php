@@ -14,7 +14,7 @@ return [
         'JWT_REFRESH' => @$_ENV['JWT_REFRESH'],
         'JWT_ALG' => 'HS256',
         'HASH_METHOD' => [
-        PASSWORD_BCRYPT,
+            PASSWORD_BCRYPT,
             ['cost' => 12]
         ],
         'TOKEN_EXPIRE_AT' => [
@@ -34,5 +34,11 @@ return [
             'from_name' => @$_ENV['SMTP_FROM_NAME'],
             'debug' => 0
         ]
+    ],
+    "GOOGLE_DRIVE" => [
+        "ID" => @$_ENV['GOOGLE_CLIENT_ID'],
+        "SECRET" => @$_ENV['GOOGLE_CLIENT_SECRET'],
+        "REDIRECT_URI" => @$_ENV['GOOGLE_REDIRECT_URI'],
+        "SCOPE" => "https://www.googleapis.com/auth/drive"
     ]
 ];
