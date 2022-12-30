@@ -16,4 +16,16 @@ class Controller
             'data' => $uploaded
         ];
     }
+
+    public static function stream($p)
+    {
+        $id = $p['id'];
+        return Plugin::stream($id);
+    }
+
+    public static function download($p)
+    {
+        $id = $p['id'];
+        return Plugin::download($id);
+    }
 }
