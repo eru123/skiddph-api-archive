@@ -17,7 +17,7 @@ class Plugin implements PluginKey, PluginDB
     const TB = 'plugin_file_uploader';
     const CONNECTORS = [
         'local' => Connector\Local::class,
-        's3bucket' => Connector\S3::class
+        's3bucket' => Connector\S3Bucket::class
     ];
 
     public static function key(string $key = null): string
@@ -97,5 +97,35 @@ class Plugin implements PluginKey, PluginDB
 
         $connector = self::getConnector();
         return $connector::upload($file_objs);
+    }
+
+    public static function stream($id)
+    {
+        $file = self::tb()
+            ->where(['id' => $id])
+            ->readOne()
+            ->arr();
+
+        if (empty($file)) {
+            throw new Exception("File not found", 404);
+        }
+
+        $connector = self::getConnector();
+        return $connector::stream($file);
+    }
+
+    public static function download($id)
+    {
+        $file = self::tb()
+            ->where(['id' => $id])
+            ->readOne()
+            ->arr();
+
+        if (empty($file)) {
+            throw new Exception("File not found", 404);
+        }
+
+        $connector = self::getConnector();
+        return $connector::download($file);
     }
 }
