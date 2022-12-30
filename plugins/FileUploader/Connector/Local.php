@@ -69,4 +69,45 @@ class Local
 
         return $res;
     }
+
+    public static function stream($file)
+    {
+        $path = File::autodir(Plugin::dir()) . '/' . $file['path'];
+        $mime = $file['mime'];
+        $name = $file['name'];
+        $size = $file['size'];
+
+        if (!file_exists($path)) {
+            throw new Exception("File not found", 404);
+        }
+
+        $fp = fopen($path, 'rb');
+
+        header("Content-Type: $mime");
+        header("Content-Disposition: attachment; filename=\"$name\"");
+        header("Content-Length: $size");
+
+        fpassthru($fp);
+        exit;
+    }
+
+    public static function download($file)
+    {
+        $path = File::autodir(Plugin::dir()) . '/' . $file['path'];
+        $name = $file['name'];
+        $size = $file['size'];
+
+        if (!file_exists($path)) {
+            throw new Exception("File not found", 404);
+        }
+
+        $fp = fopen($path, 'rb');
+
+        header("Content-Type: application/octet-stream");
+        header("Content-Disposition: attachment; filename=\"$name\"");
+        header("Content-Length: $size");
+        
+        fpassthru($fp);
+        exit;
+    }
 }
