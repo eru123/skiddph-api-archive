@@ -40,5 +40,18 @@ return [
         "SECRET" => @$_ENV['GOOGLE_CLIENT_SECRET'],
         "REDIRECT_URI" => @$_ENV['GOOGLE_REDIRECT_URI'],
         "SCOPE" => "https://www.googleapis.com/auth/drive"
+    ],
+    'FILE_UPLOADER' => [
+        'DB_ENV' => 'default',
+        'MAX_FILE_SIZE' => 1024 * 1024 * 2, // 2MB
+        'UPLOAD_DIR' => __DIR__ . '/uploads',
+        'CONNECTOR' => 'local',
+        'S3_BUCKET' => [
+            'key' => @$_ENV['S3_KEY'],
+            'secret' => @$_ENV['S3_SECRET'],
+            'region' => @$_ENV['S3_REGION'],
+            'version' => @$_ENV['S3_VERSION'],
+            'bucket' => @$_ENV['S3_BUCKET']
+        ]
     ]
 ];
