@@ -19,6 +19,11 @@ class Local
             $orm->begin();
 
             foreach ($files as $file) {
+                $size = (int) $file['size'];
+                if (Plugin::maxFileSize() < $size) {
+                    throw new Exception("File size is too large", 400);
+                }
+
                 $insert_id = Plugin::tb()
                     ->data([
                         [
@@ -27,7 +32,8 @@ class Local
                             'mime' => $file['mime'],
                             'size' => $file['size'],
                             'hash' => $file['hash'],
-                            'date' => $file['date']
+                            'date' => $file['date'],
+                            'connector' => 'local'
                         ]
                     ])
                     ->insert()
