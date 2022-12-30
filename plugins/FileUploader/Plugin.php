@@ -75,7 +75,7 @@ class Plugin implements PluginKey, PluginDB
                     $file_obj['size'] = $file['size'][$i];
                     $file_obj['full_path'] = @$file['full_path'][$i];
                     $file_obj['user_id'] = $user['id'];
-                    $file_obj['date'] = Date::parse('now');
+                    $file_obj['date'] = Date::parse('now', 'datetime');
                     $file_obj['hash'] = md5_file($file_obj['tmp_name']);
                     $file_objs[] = $file_obj;
                 } else {
@@ -85,6 +85,6 @@ class Plugin implements PluginKey, PluginDB
         }
 
         $connector = self::getConnector();
-        $uploaded = $connector::upload($file_objs);
+        return $connector::upload($file_objs);
     }
 }
