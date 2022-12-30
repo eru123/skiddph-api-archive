@@ -98,4 +98,34 @@ class Plugin implements PluginKey, PluginDB
         $connector = self::getConnector();
         return $connector::upload($file_objs);
     }
+
+    public static function stream($id)
+    {
+        $file = self::tb()
+            ->where(['id' => $id])
+            ->readOne()
+            ->arr();
+
+        if (empty($file)) {
+            throw new Exception("File not found", 404);
+        }
+
+        $connector = self::getConnector();
+        return $connector::stream($file);
+    }
+
+    public static function download($id)
+    {
+        $file = self::tb()
+            ->where(['id' => $id])
+            ->readOne()
+            ->arr();
+
+        if (empty($file)) {
+            throw new Exception("File not found", 404);
+        }
+
+        $connector = self::getConnector();
+        return $connector::download($file);
+    }
 }
