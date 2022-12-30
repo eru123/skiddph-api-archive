@@ -17,7 +17,7 @@ class Plugin implements PluginKey, PluginDB
     const TB = 'plugin_file_uploader';
     const CONNECTORS = [
         'local' => Connector\Local::class,
-        's3bucket' => Connector\S3::class
+        's3bucket' => Connector\S3Bucket::class
     ];
 
     public static function key(string $key = null): string
