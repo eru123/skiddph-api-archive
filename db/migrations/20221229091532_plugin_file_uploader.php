@@ -11,11 +11,10 @@ final class PluginFileUploader extends AbstractMigration
         $table = $this->table('plugin_file_uploader');
         $table->addColumn('user_id', 'integer', ['null' => false])
             ->addColumn('name', 'string', ['null' => false])
-            ->addColumn('path', 'string', ['null' => false])
+            ->addColumn('path', 'string', ['null' => true])
             ->addColumn('mime', 'string', ['null' => false])
             ->addColumn('size', 'integer', ['null' => false])
             ->addColumn('hash', 'string', ['null' => false])
-            ->addColumn('private', 'boolean', ['null' => false, 'default' => false])
             ->addColumn('date', 'timestamp', ['null' => false, 'default' => 'CURRENT_TIMESTAMP'])
             ->create();
     }
