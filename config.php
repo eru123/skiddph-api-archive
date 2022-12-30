@@ -14,7 +14,7 @@ return [
         'JWT_REFRESH' => @$_ENV['JWT_REFRESH'],
         'JWT_ALG' => 'HS256',
         'HASH_METHOD' => [
-        PASSWORD_BCRYPT,
+            PASSWORD_BCRYPT,
             ['cost' => 12]
         ],
         'TOKEN_EXPIRE_AT' => [
@@ -43,9 +43,9 @@ return [
     ],
     'FILE_UPLOADER' => [
         'DB_ENV' => 'default',
-        'MAX_FILE_SIZE' => 1024 * 1024 * 10, // 10MB
+        'MAX_FILE_SIZE' => 1024 * 1024 * 2, // 2MB
         'UPLOAD_DIR' => __DIR__ . '/uploads',
-        'CONNECTOR' => \Plugin\FileUploader\Connector\Local::class,
+        'CONNECTOR' => 'local',
         'S3_BUCKET' => [
             'key' => @$_ENV['S3_KEY'],
             'secret' => @$_ENV['S3_SECRET'],
