@@ -45,13 +45,14 @@ return [
         'DB_ENV' => 'default',
         'MAX_FILE_SIZE' => 1024 * 1024 * 2, // 2MB
         'UPLOAD_DIR' => __DIR__ . '/uploads',
-        'CONNECTOR' => 'local',
+        'CONNECTOR' => 's3bucket',
         'S3_BUCKET' => [
             'key' => @$_ENV['S3_KEY'],
             'secret' => @$_ENV['S3_SECRET'],
             'region' => @$_ENV['S3_REGION'],
             'version' => @$_ENV['S3_VERSION'],
-            'bucket' => @$_ENV['S3_BUCKET']
+            'bucket' => @$_ENV['S3_BUCKET'],
+            'ttl' => '+20 minutes'
         ]
     ]
 ];
