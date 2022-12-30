@@ -15,6 +15,11 @@ use Api\Database\ORM;
 class Plugin implements PluginKey, PluginDB
 {
     const TB = 'plugin_file_uploader';
+    const CONNECTORS = [
+        'local' => Connector\Local::class,
+        's3bucket' => Connector\S3::class
+    ];
+
     public static function key(string $key = null): string
     {
         return "FILE_UPLOADER";
@@ -47,7 +52,13 @@ class Plugin implements PluginKey, PluginDB
 
     public static function getConnector(): string
     {
-        return self::config()->get('CONNECTOR');
+        $con = self::config()->get('CONNECTOR');
+        return self::CONNECTORS[$con];
+    }
+
+    public static function maxFileSize(): int
+    {
+        return (int) self::config()->get('MAX_FILE_SIZE');
     }
 
     public static function upload()
