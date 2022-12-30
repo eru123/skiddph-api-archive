@@ -26,7 +26,7 @@ class File
         $path = self::clean($path);
 
         if (is_dir($path)) {
-            return $path;
+            return rtrim($path, '/');
         }
 
         $path = explode('/', $path);
@@ -47,7 +47,7 @@ class File
             return false;
         }
 
-        return $cur;
+        return rtrim($cur, '/');
     }
 
     /**
@@ -128,5 +128,20 @@ class File
         }
 
         return $path;
+    }
+
+    /**
+     * Get file extension
+     * @param string $file The file path
+     * @return string
+     */
+    public static function ext(string $file): string
+    {   
+        $narr = explode('.', $file);
+        if (count($narr) >= 1) {
+            return array_pop($narr);
+        }
+
+        return '';
     }
 }
