@@ -2,7 +2,8 @@
     "require": {
         "vlucas/phpdotenv": "^5.5",
         "robmorgan/phinx": "^0.13.3",
-        "phpmailer/phpmailer": "^6.7"
+        "phpmailer/phpmailer": "^6.7",
+        "aws/aws-sdk-php": "^3.255"
     },
     "autoload": {
         "psr-4": {
