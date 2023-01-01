@@ -56,8 +56,19 @@ class Request
                 $origin = '*';
             }
         }
-        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-        header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+
+        header("Access-Control-Allow-Origin: $origin");
+        header('Access-Control-Allow-Credentials: true');
+
+        if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+            if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD'])) {
+                header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+            }
+            if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS'])) {
+                header("Access-Control-Allow-Headers: {$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+            }
+            exit;
+        }
     }
 
     static function bodySchema(array $schema)
@@ -86,7 +97,7 @@ class Request
             }
 
             $opts['type'] = strtolower($opts['type']);
-            if ($opts['type'] === 'string' || $opts['type'] ===  'email') {
+            if ($opts['type'] === 'string' || $opts['type'] === 'email') {
                 $body[$key] = (string) $body[$key];
             } else if ($opts['type'] === 'int') {
                 $body[$key] = (int) $body[$key];
