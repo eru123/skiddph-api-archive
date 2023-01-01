@@ -10,7 +10,7 @@ if (session_status() == PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/vendor/autoload.php';
 Bootstrapper::init(__DIR__);
-
+Request::allowCORS();
 $api = require __DIR__ . '/api/index.php';
 
 $router = new Router();
