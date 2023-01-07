@@ -7,11 +7,18 @@
     },
     "autoload": {
         "psr-4": {
-            "Api\\": "system/",
-            "Plugin\\": "plugins/"
+            "SkiddPH\\": "system/"
         },
-        "classmap": [
-            "system/Core"
+        "files": [
+            "system/functions.php"
+        ]
+    },
+    "scripts": {
+        "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+    },
+    "extra": {
+        "aws/aws-sdk-php": [
+            "S3"
         ]
     }
 }
