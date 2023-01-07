@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Plugin Configuration
+ * 
+ * FORMAT:
+ * 
+ *     return [
+ *         'PLUGIN_KEY' => <PLUGIN CONFIGURATION>
+ *     ];
+ */
+
 return [
     'DATABASES' => [
         'default' => [
