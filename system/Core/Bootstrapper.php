@@ -1,6 +1,9 @@
 <?php
 
+namespace SkiddPH\Core;
+
 use Dotenv\Dotenv;
+use SkiddPH\Core\Plugin\Config as PluginConfig;
 
 class Bootstrapper
 {
