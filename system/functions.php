@@ -14,6 +14,10 @@ function config(...$args)
     }
 
     if (isset($args[1])) {
+        if (empty($args[0])) {
+            throw new Exception("Cannot access root config from here");
+        }
+
         Config::set((string) $args[0], $args[1]);
         return;
     }
