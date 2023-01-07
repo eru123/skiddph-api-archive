@@ -2,6 +2,7 @@
 
 use SkiddPH\Core\Config;
 use SkiddPH\Core\Plugin\Config as PluginConfig;
+
 /**
  * Access Global Config
  * @param array $args
@@ -40,4 +41,46 @@ function pconfig($key, ...$args)
     }
 
     return $plugin->get((string) @$args[0], @$args[2]);
+}
+
+/**
+ * Session helper
+ * @param  string  $key         The key of the session
+ * @param  mixed   $value       The value of the session
+ * @param  mixed   $default     The default value to return if the key is not found.
+ * @return mixed
+ */
+function gsession($key, $value = null, $default = null)
+{
+    $data = & $_SESSION;
+    if (empty($data)) {
+        $data = [];
+    }
+
+    $keys = explode('.', $key);
+    foreach ($keys as $key) {
+        if (!isset($data[$key]) || !is_array($data[$key])) {
+            $data[$key] = [];
+        }
+
+        $data = & $data[$key];
+    }
+
+    if (isset($value)) {
+        $data = $value;
+        return;
+    }
+
+    return $data === null ? $default : $data;
+}
+
+/**
+ * ENV helper
+ * @param  string  $key         The key of the env
+ * @param  bool|null|string   $default     The default value to return if the key is not found.
+ * @return bool|null|string
+ */
+function env($key, $default = null)
+{
+    return empty($_ENV[$key]) ? $default : $_ENV[$key];
 }
