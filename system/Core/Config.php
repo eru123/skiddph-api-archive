@@ -30,6 +30,15 @@ class Config
     }
 
     /**
+     * Alias of `Config::clear()`.
+     * @return  void
+     */
+    final public static function reset(): void
+    {
+        self::clear();
+    }
+
+    /**
      * Set a configuration value.
      * @param   string  $key    The key of the configuration.
      * @param   mixed   $value  The value of the configuration.
