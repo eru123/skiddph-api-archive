@@ -49,7 +49,11 @@ class FileUploader implements PluginKey, PluginDB
         return self::config()->get('S3_BUCKET');
     }
 
-    public static function getConnector(): string
+    /**
+     * Summary of getConnector
+     * @return Connector\Local|Connector\S3Bucket
+     */
+    public static function getConnector()
     {
         $con = self::config()->get('CONNECTOR');
         return self::CONNECTORS[$con];

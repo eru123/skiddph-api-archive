@@ -6,8 +6,6 @@ class URL
 {
     private $url;
 
-    const extract = URLExtract::class;
-
     public function __construct(string $url)
     {
         $this->url = $url;
@@ -15,7 +13,7 @@ class URL
 
     public function extract(): array
     {
-        return self::extract::from($this->url);
+        return URLExtract::from($this->url);
     }
 
     public function unparse_url($parsed_url)

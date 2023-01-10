@@ -1,6 +1,6 @@
 <?php
 
-namespace Plugin\FileUploader\Connector;
+namespace SkiddPH\Plugin\FileUploader\Connector;
 
 use Exception;
 use SkiddPH\Plugin\FileUploader\FileUploader;
