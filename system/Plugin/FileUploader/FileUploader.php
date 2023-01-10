@@ -87,7 +87,6 @@ class FileUploader implements PluginKey, PluginDB
                     $file_obj['user_id'] = $user['id'];
                     $file_obj['date'] = Date::parse('now', 'datetime');
                     $file_obj['hash'] = hash_file('sha256', $file_obj['tmp_name']);
-
                     $file_objs[] = $file_obj;
                 } else {
                     throw new Exception("Error uploading file");
