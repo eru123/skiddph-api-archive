@@ -267,15 +267,24 @@ class Helper
     public static function jsonDecode(string $data): mixed
     {
         $rgx = [
-            ['/^(false)$/i', function($v) {
-                return false;
-            }],
-            ['/^(true)$/i', function($v) {
-                return true;
-            }],
-            ['/^(null)$/i', function($v) {
-                return null;
-            }]
+            [
+                '/^(false)$/i',
+                function ($v) {
+                    return false;
+                }
+            ],
+            [
+                '/^(true)$/i',
+                function ($v) {
+                    return true;
+                }
+            ],
+            [
+                '/^(null)$/i',
+                function ($v) {
+                    return null;
+                }
+            ]
         ];
         foreach ($rgx as $value) {
             if (preg_match($value[0], $data)) {

@@ -4,30 +4,25 @@ namespace SkiddPH\Plugin\SMTP;
 
 use Exception;
 use PHPMailer\PHPMailer\PHPMailer;
-use SkiddPH\Core\Plugin\Config as PluginConfig;
 
 class SMTP
 {
-    private static $key = "SMTPS";
     private $smtp_opts = null;
     private $to = [];
     private $cc = [];
     private $bcc = [];
 
-    static function config(): PluginConfig
+    public static function use (string $key = null): self
     {
-        return new PluginConfig(self::$key);
-    }
-
-    public static function use (string $key = 'default'): self
-    {
+        if (empty($key)) {
+            $key = pcfg('smtp.smtp');
+        }
         return new self($key);
     }
 
     public function __construct(string $key)
     {
-        $cfg = SMTP::config();
-        $this->smtp_opts = $cfg->get($key);
+        $this->smtp_opts = pcfg('smtp.smtps.' . pcfg('smtp.smtp'));
 
         if (empty($this->smtp_opts)) {
             throw new Exception('Invalid SMTP configuration', 400);

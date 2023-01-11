@@ -12,7 +12,7 @@ class Local
     public static function upload($files)
     {
         $orm = FileUploader::db();
-        $upload_dir = File::autodir(FileUploader::dir());
+        $upload_dir = File::autodir(pcfg('fileuploader.upload_dir'));
         $res = [];
 
         try {
@@ -20,7 +20,7 @@ class Local
 
             foreach ($files as $file) {
                 $size = (int) $file['size'];
-                if (FileUploader::maxFileSize() < $size) {
+                if (pcfg('fileuploader.max_upload_size') < $size) {
                     throw new Exception("File size is too large", 400);
                 }
 
@@ -72,7 +72,7 @@ class Local
 
     public static function stream($file)
     {
-        $path = File::autodir(FileUploader::dir()) . '/' . $file['path'];
+        $path = File::autodir(pcfg('fileuploader.upload_dir')) . '/' . $file['path'];
         $mime = $file['mime'];
         $name = $file['name'];
         $size = $file['size'];
@@ -93,7 +93,7 @@ class Local
 
     public static function download($file)
     {
-        $path = File::autodir(FileUploader::dir()) . '/' . $file['path'];
+        $path = File::autodir(pcfg('fileuploader.upload_dir')) . '/' . $file['path'];
         $name = $file['name'];
         $size = $file['size'];
 
@@ -106,7 +106,7 @@ class Local
         header("Content-Type: application/octet-stream");
         header("Content-Disposition: attachment; filename=\"$name\"");
         header("Content-Length: $size");
-        
+
         fpassthru($fp);
         exit;
     }

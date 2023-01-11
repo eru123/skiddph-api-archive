@@ -1,17 +1,16 @@
 <?php
 
 use SkiddPH\Core\Config;
-use SkiddPH\Core\Plugin\Config as PluginConfig;
 
 /**
  * Access Global Config
  * @param array $args
  * @return mixed
  */
-function config(...$args)
+function cfg(...$args)
 {
     if (Config::isSystemConfig((string) @$args[0])) {
-        throw new Exception("Cannot access system config from here");
+        throw new Exception("Cannot access system config from here. Use sys() instead.");
     }
 
     if (isset($args[1])) {
@@ -27,20 +26,35 @@ function config(...$args)
 }
 
 /**
- * Access Plugin Config
- * @param   string  $key    The key of the plugin
- * @param   string  $args   The arguments
- * @return mixed
+ * Access System Config
+ * @param   string  $key        The key of the config
+ * @param   mixed   $value      The value of the config
+ * @param   mixed   $default    The default value to return if the key is not found.
+ * @return  mixed
  */
-function pconfig($key, ...$args)
-{
-    $plugin = new PluginConfig($key);
-    if (isset($args[1])) {
-        $plugin->set((string) $args[0], $args[1]);
+function sys($key = null, $value = null, $default = null)
+{   
+    $key = empty($key) ? '' : '.'.$key;
+    $key = 'system' . $key;
+    if (isset($value)) {
+        Config::set($key, $value);
         return;
     }
 
-    return $plugin->get((string) @$args[0], @$args[2]);
+    return Config::get($key, $default);
+}
+
+/**
+ * Access Read-only Plugin Config
+ * @param   string  $key        The key of the config
+ * @param   mixed   $default    The default value to return if the key is not found.
+ * @return  mixed
+ */
+function pcfg($key = '', $default = null)
+{
+    $has_key = !empty($key);
+    $key = 'plugins' . ($has_key ? '.' . $key : '');
+    return sys($key, null, $default);
 }
 
 /**
@@ -50,7 +64,7 @@ function pconfig($key, ...$args)
  * @param  mixed   $default     The default value to return if the key is not found.
  * @return mixed
  */
-function gsession($key, $value = null, $default = null)
+function sess($key, $value = null, $default = null)
 {
     $data = & $_SESSION;
     if (empty($data)) {
@@ -80,7 +94,7 @@ function gsession($key, $value = null, $default = null)
  * @param  bool|null|string   $default     The default value to return if the key is not found.
  * @return bool|null|string
  */
-function env($key, $default = null)
+function e($key, $default = null)
 {
     return empty($_ENV[$key]) ? $default : $_ENV[$key];
 }

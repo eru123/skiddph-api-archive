@@ -5,37 +5,18 @@ namespace SkiddPH\Plugin\Auth;
 use Exception;
 use Error;
 use SkiddPH\Helper\Arr;
-use SkiddPH\Core\Config;
 use SkiddPH\Core\Plugin\DB as PluginDB;
-use SkiddPH\Core\Plugin\Key as PluginKey;
-use SkiddPH\Core\Plugin\Config as PluginConfig;
 use SkiddPH\Plugin\Database\ORM;
 use SkiddPH\Plugin\Database\Database;
 use SkiddPH\Plugin\Auth\Model\Users as UsersModel;
 use SkiddPH\Plugin\Auth\Model\Roles as RolesModel;
 use SkiddPH\Plugin\Auth\Model\Info as InfoModel;
 
-class Auth implements PluginDB, PluginKey
+class Auth implements PluginDB
 {
-    private static $key = "AUTHENTICATION";
-
-    static function key(string $key = null): string
-    {
-        if (is_string($key) && !empty($key)) {
-            self::$key = $key;
-        }
-
-        return self::$key;
-    }
-
-    static function config(): PluginConfig
-    {
-        return new PluginConfig(self::$key);
-    }
-
     final static function db(): ORM
     {
-        return Database::connect(self::config()->get('DB_ENV'));
+        return Database::connect();
     }
 
     final static function login($user, string $pass, array $payload = [], array $opts = [], array $payload_keys = [])
@@ -51,7 +32,7 @@ class Auth implements PluginDB, PluginKey
         if (preg_match('/^(.*)@(.*)\.(.*)$/', $user)) {
             $user_id = InfoModel::find(['email' => $user]);
             $user = null;
-            
+
             if (!empty($user_id)) {
                 $user = Users::find($user_id, false, false);
             }
@@ -78,7 +59,7 @@ class Auth implements PluginDB, PluginKey
         $payload_keys_default = ['id', 'user', 'roles'];
         $payload_keys = array_merge($payload_keys_default, $payload_keys);
 
-        $expires_at = @self::config()->get('TOKEN_EXPIRE_AT')[$opts['ttl']] ?? 'now + 7days';
+        $expires_at = pcfg('auth.token_expire_at.' . $opts['ttl'], 'now + 7days');
 
         $pre_payload = Arr::from($user)->pick($payload_keys)->merge([
             'iat' => 'now',
@@ -114,7 +95,7 @@ class Auth implements PluginDB, PluginKey
         $payload_keys_default = ['id', 'user', 'roles'];
         $payload_keys = array_merge($payload_keys_default, $payload_keys);
 
-        $expires_at = @self::config()->get('TOKEN_EXPIRE_AT')[$opts['ttl']] ?? 'now + 7days';
+        $expires_at = pcfg('auth.token_expire_at.' . $opts['ttl'], 'now + 7days');
 
         $pre_payload = Arr::from($user)->pick($payload_keys)->merge([
             'iat' => 'now',
@@ -170,7 +151,7 @@ class Auth implements PluginDB, PluginKey
 
     final static function user()
     {
-        $user = Config::get('USER');
+        $user = cfg('USER');
         if (!empty($user)) {
             return $user;
         }
@@ -186,7 +167,7 @@ class Auth implements PluginDB, PluginKey
             return null;
         }
 
-        Config::set('USER', $user);
+        cfg('USER', $user);
         return $user;
     }
 

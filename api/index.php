@@ -14,7 +14,7 @@ use SkiddPH\Core\HTTP\Router;
 // This will load the env file and the config file
 Bootstrapper::init(__DIR__ . '/..');
 
-if (config('env.ENVIRONMENT') === 'development') {
+if (e('ENV') === 'development') {
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
