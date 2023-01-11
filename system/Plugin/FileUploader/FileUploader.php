@@ -4,14 +4,12 @@ namespace SkiddPH\Plugin\FileUploader;
 
 use Exception;
 use SkiddPH\Helper\Date;
-use SkiddPH\Core\Plugin\Key as PluginKey;
 use SkiddPH\Core\Plugin\DB as PluginDB;
-use SkiddPH\Core\Plugin\Config as PluginConfig;
 use SkiddPH\Plugin\Database\ORM;
 use SkiddPH\Plugin\Database\Database;
 use SkiddPH\Plugin\Auth\Auth;
 
-class FileUploader implements PluginKey, PluginDB
+class FileUploader implements PluginDB
 {
     const TB = 'plugin_file_uploader';
     const CONNECTORS = [
@@ -24,29 +22,14 @@ class FileUploader implements PluginKey, PluginDB
         return "FILE_UPLOADER";
     }
 
-    public static function config(): PluginConfig
-    {
-        return new PluginConfig(self::key());
-    }
-
     public static function db(): ORM
     {
-        return Database::connect(self::config()->get('DB_ENV'));
-    }
-
-    public static function dir(): string
-    {
-        return self::config()->get('UPLOAD_DIR');
+        return Database::connect();
     }
 
     public static function tb(): ORM
     {
         return self::db()->clear()->table(self::TB);
-    }
-
-    public static function s3BucketConfig(): array
-    {
-        return self::config()->get('S3_BUCKET');
     }
 
     /**
@@ -55,13 +38,7 @@ class FileUploader implements PluginKey, PluginDB
      */
     public static function getConnector()
     {
-        $con = self::config()->get('CONNECTOR');
-        return self::CONNECTORS[$con];
-    }
-
-    public static function maxFileSize(): int
-    {
-        return (int) self::config()->get('MAX_FILE_SIZE');
+        return self::CONNECTORS[pcfg('fileuploader.connector')];
     }
 
     public static function upload()
