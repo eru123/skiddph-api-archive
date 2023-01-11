@@ -2,45 +2,26 @@
 
 namespace SkiddPH\Plugin\Database;
 
-use SkiddPH\Core\Plugin\Key as PluginKey;
-use SkiddPH\Core\Plugin\Config as PluginConfig;
 use Exception;
 use PDO;
 
-class Database implements PluginKey
+class Database
 {
-    private static $key = "DATABASES";
-
-    static function key(string $key = null): string
-    {
-        if (is_string($key) && !empty($key)) {
-            self::$key = $key;
-        }
-
-        return self::$key;
-    }
-
-    static function config(): PluginConfig
-    {
-        return new PluginConfig(self::$key);
-    }
-
     /**
      * Holds Multiple Database Connections
      * @var array
      */
     private static $connections = [];
-
     /**
      * Connect to a database with a key and return an ORM instance.
      * @param   string  $key    The key of the database connection.
      * @return  ORM
      */
-    final static function connect(string $key): ORM
+    final static function connect(string $key = null): ORM
     {
+        $key = $key ?? pcfg('database.database', 'default');
         if (!isset(self::$connections[$key])) {
-            $cfg = self::config();
-            $pdo_args = $cfg->get($key);
+            $pdo_args = pcfg("database.databases.$key", null);
             if ($pdo_args === null) {
                 throw new Exception("Database connection not found: $key");
             }
@@ -49,7 +30,6 @@ class Database implements PluginKey
 
         return new ORM(self::$connections[$key]);
     }
-
     /**
      * Remove a database connection.
      * @param   string  $key    The key of the database connection.
@@ -61,14 +41,13 @@ class Database implements PluginKey
             unset(self::$connections[$key]);
         }
     }
-
     /**
      * Generate Phinx Environment Configs
      * @return array
      */
     final static function phinxConfig(): array
     {
-        $cfg = self::config()->all();
+        $cfg = pcfg('database.databases', []);
         return Helper::toPhinxConfig($cfg);
     }
 }
