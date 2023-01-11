@@ -12,19 +12,11 @@ use Exception;
 
 class Email
 {
-    private $smtp_key = 'default';
     const NEW_EMAIL = 'NEW_EMAIL';
     const RESET_PASSWORD = 'RESET_PASSWORD';
-    public static function use(string $key): self
+    public static function use (): self
     {
-        return new self($key);
-    }
-
-    public function __construct(string $key = null)
-    {
-        if (!empty($key)) {
-            $this->smtp_key = $key;
-        }
+        return new self();
     }
 
     public function code($opts): int
@@ -37,8 +29,7 @@ class Email
         }
 
         $code = Rand::int(100000, 999999);
-        $cfg = Auth::config();
-        $exp = $cfg->get('EMAIL_VERIFICATION_EXPIRE_AT', 'now + 24mins');
+        $exp = pcfg('email_verification_expire_at', 'now + 24mins');
         $data = [
             'code' => $code,
             'exp' => $exp
@@ -60,7 +51,7 @@ class Email
         }
 
         try {
-            $smtp = SMTP::use($this->smtp_key);
+            $smtp = SMTP::use (pcfg('smtp.smtp', 'default'));
             $smtp->to($opts['email']);
             $smtp->subject('Email Verification');
             $msg = !empty(@$opts['name']) ? 'Hi ' . $opts['name'] . ', ' : 'Hi, ';
