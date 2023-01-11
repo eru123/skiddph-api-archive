@@ -17,6 +17,8 @@ $auth->post('/user/change/user', [Auth::class, 'changeUsername']);
 $auth->post('/user/change/password', [Auth::class, 'changePassword']);
 $auth->post('/user/{userId}/add/role', [Auth::class, 'addRole']);
 $auth->post('/user/{userId}/remove/role', [Auth::class, 'removeRole']);
+$auth->get('/user', [Auth::class, 'getUser']);
+$auth->get('/user/{userId}', [Auth::class, 'getUser']);
 
 // FILEUPLOADER PLUGIN
 $fileUploader = new Router();
