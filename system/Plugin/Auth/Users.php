@@ -291,6 +291,15 @@ class Users
         return true;
     }
 
+    static function publicUser($user)
+    {
+        $user = array_filter($user, function ($key) {
+            return in_array($key, ['id', 'fname', 'lname', 'email', 'user', 'roles']);
+        }, ARRAY_FILTER_USE_KEY);
+
+        return $user;
+    }
+
     public static function lastError(): ?string
     {
         return self::$last_error;
