@@ -138,7 +138,8 @@ class Auth implements PluginDB
     final static function getBearerToken()
     {
         $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? $headers['X-Authorization'] ?? $headers['x-authorization'] ?? $headers['X-AUTHORIZATION'] ?? null;
+
         if (!$authHeader) {
             return null;
         }
