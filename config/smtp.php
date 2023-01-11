@@ -6,12 +6,12 @@ return [
      */
     'smtps' => [
         'default' => [
-            'host' => env('SMTP_HOST'),
-            'port' => env('SMTP_PORT'),
-            'user' => env('SMTP_USER'),
-            'pass' => env('SMTP_PASS'),
-            'from' => env('SMTP_FROM'),
-            'from_name' => env('SMTP_FROM_NAME'),
+            'host' => e('SMTP_HOST'),
+            'port' => e('SMTP_PORT'),
+            'user' => e('SMTP_USER'),
+            'pass' => e('SMTP_PASS'),
+            'from' => e('SMTP_FROM'),
+            'from_name' => e('SMTP_FROM_NAME'),
             'debug' => 0
         ]
     ],
