@@ -17,3 +17,11 @@ RewriteRule ^(.*)$ index.php [QSA]
 # Rewrite for HTTP_AUTHORIZATION
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+# Security Compliance
+Header set Content-Security-Policy "content-security-policy: default-src 'self'; connect-src *; font-src *; frame-src *; img-src * data:; media-src *; object-src *; script-src * 'unsafe-inline' 'unsafe-eval'; style-src * 'unsafe-inline';"
+Header set Referrer-Policy "no-referrer"
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"
+Header set X-XSS-Protection "1; mode=block"

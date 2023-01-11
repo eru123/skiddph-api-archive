@@ -318,4 +318,24 @@ class Controller
             'success' => "Successfully removed role.",
         ];
     }
+
+    static function getUser($param)
+    {
+        Auth::guard();
+        $is_public = !empty(@$param['userId']);
+        $user_id = $is_public ? $param['userId'] : Auth::user()['id'];
+
+        $user = Users::find($user_id);
+        if (empty($user)) {
+            throw new Exception('User does not exist.', 400);
+        }
+
+        if (!$is_public) {
+            $user = Users::publicUser($user);
+        }
+
+        return [
+            'data' => $user
+        ];
+    }
 }
