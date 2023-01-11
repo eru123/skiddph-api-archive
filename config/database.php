@@ -7,9 +7,9 @@ return [
      */
     'databases' => [
         'default' => [
-            env('DEFAULT_DB_DSN', 'mysql:host=localhost;dbname=skiddph'),
-            env('DEFAULT_DB_USER', 'root'),
-            env('DEFAULT_DB_PASS', '')
+            e('DEFAULT_DB_DSN', 'mysql:host=localhost;dbname=skiddph'),
+            e('DEFAULT_DB_USER', 'root'),
+            e('DEFAULT_DB_PASS', '')
         ]
     ],
     /**
