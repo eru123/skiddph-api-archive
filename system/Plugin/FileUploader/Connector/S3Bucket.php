@@ -6,8 +6,8 @@ use Exception;
 use SkiddPH\Plugin\FileUploader\FileUploader;
 use SkiddPH\Helper\Date;
 use SkiddPH\Helper\File;
-use \Aws\S3\S3Client;
-use \Aws\S3\Exception\S3Exception;
+use Aws\S3\S3Client;
+use Aws\S3\Exception\S3Exception;
 
 class S3Bucket
 {
@@ -15,13 +15,12 @@ class S3Bucket
     {
         $s3 = null;
         try {
-            $cfg = FileUploader::s3BucketConfig();
             $s3 = new S3Client([
-                'version' => 'latest',
-                'region' => $cfg['region'],
+                'version' => pcfg('aws.s3.version', 'latest'),
+                'region' => pcfg('aws.s3.region', 'us-east-1'),
                 'credentials' => [
-                    'key' => $cfg['key'],
-                    'secret' => $cfg['secret']
+                    'key' => pcfg('aws.s3.key'),
+                    'secret' => pcfg('aws.s3.secret')
                 ]
             ]);
         } catch (Exception $e) {
@@ -34,7 +33,7 @@ class S3Bucket
     public static function upload($files)
     {
         $orm = FileUploader::db();
-        $bucket = FileUploader::s3BucketConfig()['bucket'];
+        $bucket = pcfg('aws.s3.bucket');
         $res = [];
 
         try {
@@ -42,7 +41,7 @@ class S3Bucket
 
             foreach ($files as $file) {
                 $size = (int) $file['size'];
-                if (FileUploader::maxFileSize() < $size) {
+                if (pcfg('fileuploader.max_upload_size') < $size) {
                     throw new Exception("File size is too large", 400);
                 }
 
@@ -101,14 +100,12 @@ class S3Bucket
     public static function stream($file)
     {
         $name = $file['path'];
-        $bucket = FileUploader::s3BucketConfig()['bucket'];
-        $ttl = FileUploader::s3BucketConfig()['ttl'];
         $s3 = self::factory();
         $cmd = $s3->getCommand('GetObject', [
-            'Bucket' => $bucket,
+            'Bucket' => pcfg('aws.s3.bucket'),
             'Key' => $name
         ]);
-        $request = $s3->createPresignedRequest($cmd, $ttl);
+        $request = $s3->createPresignedRequest($cmd, pcfg('fileuploader.ttl', '+20 minutes'));
         $url = (string) $request->getUri();
         header("Location: $url");
         exit;
