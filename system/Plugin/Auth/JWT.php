@@ -15,9 +15,6 @@ class JWT
 
     public static $timestamp = null;
 
-    public static $cfg_key_secret = 'JWT_SECRET';
-    public static $cfg_key_refresh = 'JWT_REFRESH';
-    public static $cfg_key_algo = 'JWT_ALG';
     public static $default_algo = 'HS256';
 
     public static $algs = [
@@ -28,9 +25,8 @@ class JWT
 
     public static function decode(string $jwt, string $key = null): array
     {
-        $cfg = Auth::config();
-        $key = $key ?: $cfg->get(self::$cfg_key_secret);
-        $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
+        $key = pcfg('auth.secret', $key);
+        $alg = pcfg('auth.alg', self::$default_algo);
 
         if (empty($key)) {
             throw new Exception('Invalid secret key', 400);
@@ -86,7 +82,7 @@ class JWT
             throw new Exception('Algorithm not allowed', 401);
         }
 
-        if (!self::verify("{$headb64}.{$bodyb64}", $sig)) {
+        if (!self::verify("{$headb64}.{$bodyb64}", $sig, $key)) {
             throw new Exception('Signature verification failed', 401);
         }
 
@@ -113,9 +109,8 @@ class JWT
 
     public static function encode(array $payload, string $key = null): string
     {
-        $cfg = Auth::config();
-        $key = $key ?: $cfg->get(self::$cfg_key_secret);
-        $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
+        $key = pcfg('auth.secret', $key);
+        $alg = pcfg('auth.alg', self::$default_algo);
 
         if (empty($key)) {
             throw new Exception('Invalid secret key', 400);
@@ -158,7 +153,6 @@ class JWT
 
     public static function issue_refresh(string $token, string $key = null): string
     {
-        $cfg = Auth::config();
         $decoded = self::decode($token);
         $time_diff = $decoded['exp'] - $decoded['iat'];
         $exp = Date::parse('now + ' . $time_diff . 's', "s", Date::UNIT);
@@ -168,15 +162,13 @@ class JWT
             'exp' => $exp,
             'token' => $token
         ];
-        $key = $key ? $key : $cfg->get(self::$cfg_key_secret);
-        return self::encode($payload, $key);
+        return self::encode($payload, pcfg('auth.refresh', $key));
     }
 
     public static function refresh(string $token, string $refresh): string
     {
-        $cfg = Auth::config();
         try {
-            $refresh = self::decode($refresh);
+            $refresh = self::decode($refresh, pcfg('auth.refresh'));
             $payload = self::decode($refresh['token']);
             if ($token !== @$refresh['token']) {
                 throw new Exception('Invalid refresh token', 401);
@@ -190,7 +182,7 @@ class JWT
             $payload['iat'] = Date::parse('now', "s", Date::UNIT);
             $payload['exp'] = $payload['iat'] + $time_diff;
 
-            return self::encode($payload, $cfg->get(self::$cfg_key_secret));
+            return self::encode($payload, pcfg('auth.secret'));
         } catch (Exception $e) {
             throw new Exception('Invalid refresh token', 401);
         }
@@ -205,11 +197,9 @@ class JWT
         return hash_hmac($algorithm, $msg, $key, true);
     }
 
-    private static function verify(string $msg, string $signature): bool
+    private static function verify(string $msg, string $signature, string $key = null): bool
     {
-        $cfg = Auth::config();
-        $key = $cfg->get(self::$cfg_key_secret);
-        $alg = $cfg->get(self::$cfg_key_algo, self::$default_algo);
+        $alg = pcfg('auth.alg', self::$default_algo);
 
         if (empty($key)) {
             throw new Exception('Invalid secret key', 400);
@@ -288,11 +278,11 @@ class JWT
     private static function handleJsonError(int $errno): void
     {
         $messages = [
-        JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
-        JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
-        JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
-        JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
-        JSON_ERROR_UTF8 => 'Malformed UTF-8 characters'
+            JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
+            JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
+            JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
+            JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
+            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters'
         ];
         throw new Exception(
             isset($messages[$errno])
