@@ -1,11 +1,11 @@
 <?php
 
 return [
-    's3bucket' => [
-        'key' => env('S3_KEY'),
-        'secret' => env('S3_SECRET'),
-        'region' => env('S3_REGION'),
-        'version' => env('S3_VERSION'),
-        'bucket' => env('S3_BUCKET'),
+    's3' => [
+        'key' => e('S3_KEY'),
+        'secret' => e('S3_SECRET'),
+        'region' => e('S3_REGION'),
+        'version' => e('S3_VERSION'),
+        'bucket' => e('S3_BUCKET'),
     ]
 ];
