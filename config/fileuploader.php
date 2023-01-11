@@ -4,16 +4,16 @@ return [
     /**
      * Maximum File Upload Size in Bytes
      */
-    'max_upload_size' => 2097152,
+    'max_upload_size' => (int) e('FILE_UPLOADER_MAX_UPLOAD_SIZE', 2097152 /** 2MB */),
     /**
      * Connector to be use
      * valid values: local|s3bucket
      */
-    'connector' => env('FILE_UPLOADER_CONNECTOR', 'local'),
+    'connector' => e('FILE_UPLOADER_CONNECTOR', 'local'),
     /**
      * Upload Directory - For Local Storage Connector
      */
-    'upload_dir' => __DIR__ . '/uploads',
+    'upload_dir' => __DIR__ . '/../uploads',
     /**
      * Time to Live for S3 Bucket URL
      */
