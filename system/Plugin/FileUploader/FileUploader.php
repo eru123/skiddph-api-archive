@@ -108,4 +108,33 @@ class FileUploader implements PluginDB
         $connector = self::getConnector();
         return $connector::download($file);
     }
+
+    /**
+     * Summary of Files
+     * @param mixed $id
+     * @param mixed $query
+     * @return array
+     */
+    public static function files($id, $query)
+    {
+        $limit = $query['limit'];
+        $marker = $query['marker'];
+        $order = $query['order'];
+        $mime = $query['mime'];
+        $mime = str_replace('*', '%', $mime);
+
+        $q = self::tb()
+            ->where(['user_id' => $id])
+            ->where(['mime' => $mime]);
+
+        if (!empty($marker)) {
+            $q->where(['date' => ($order == 'asc' ? ['>' => $marker] : ['<' => $marker])]);
+        }
+
+        return $q->limit($limit)
+            ->order('date', $order)
+            ->readMany()
+            ->arr();
+
+    }
 }
