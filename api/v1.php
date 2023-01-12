@@ -31,5 +31,6 @@ $fileUploader->get('/download/{id}', [FileUploader::class, 'download']);
 $router = new Router();
 $router->base('/v1');
 $router->add($auth);
+$router->add($fileUploader);
 
 return $router;
