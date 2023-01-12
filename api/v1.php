@@ -24,6 +24,7 @@ $auth->get('/user/{userId}', [Auth::class, 'getUser']);
 $fileUploader = new Router();
 $fileUploader->base('/fileuploader');
 $fileUploader->post('/upload', [FileUploader::class, 'upload']);
+$fileUploader->post('/files', [FileUploader::class, 'files']);
 $fileUploader->get('/stream/{id}', [FileUploader::class, 'stream']);
 $fileUploader->get('/download/{id}', [FileUploader::class, 'download']);
 
