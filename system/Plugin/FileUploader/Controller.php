@@ -42,7 +42,7 @@ class Controller
             'marker' => [
                 'type' => 'string',
                 'default' => '',
-                'regex' => '/^[a-zA-Z0-9]{32}$/'
+                'regex' => '/^(|[a-zA-Z0-9]{32})$/'
             ],
             'order' => [
                 'type' => 'string',
@@ -60,7 +60,9 @@ class Controller
 
         return [
             'success' => "Files fetched successfully",
-            'data' => $files
+            'data' => $files,
+            'marker' => FileUploader::marker($files),
+            'count' => count($files) 
         ];
     }
 }

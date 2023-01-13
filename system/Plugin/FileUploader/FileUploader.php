@@ -125,7 +125,8 @@ class FileUploader implements PluginDB
 
         $q = self::tb()
             ->where(['user_id' => $id])
-            ->where(['mime' => $mime]);
+            ->and()
+            ->where(['mime' => ['like' => self::db()->quote($mime)]]);
 
         if (!empty($marker)) {
             $q->where(['date' => ($order == 'asc' ? ['>' => $marker] : ['<' => $marker])]);
@@ -134,7 +135,15 @@ class FileUploader implements PluginDB
         return $q->limit($limit)
             ->order('date', $order)
             ->readMany()
+            ->omit(['user_id', 'connector', 'path'])
             ->arr();
+    }
 
+    public static function marker($files) {
+        if (count($files) == 0) {
+            return '';
+        }
+
+        return @end($files)['date'] ?? '';
     }
 }
