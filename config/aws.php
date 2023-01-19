@@ -1,6 +1,9 @@
 <?php
 
 return [
+    /**
+     * AWS S3 Config
+     */
     's3' => [
         'key' => e('S3_KEY'),
         'secret' => e('S3_SECRET'),

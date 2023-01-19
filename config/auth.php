@@ -17,7 +17,13 @@ return [
      * Password Hash Method - Arguments in `password_hash` function
      */
     'hash_method' => [
+        /**
+         * Password Hash Algorithm
+         */
         PASSWORD_BCRYPT,
+        /**
+         * Password Hash Options
+         */
         ['cost' => 12]
     ],
     /**
