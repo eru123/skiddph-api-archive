@@ -5,11 +5,13 @@ require __DIR__ . '/vendor/autoload.php';
 use SkiddPH\Core\Bootstrapper;
 use SkiddPH\Plugin\Database\Database;
 
+$workdir = __DIR__;
+
 /**
  * Load the config.php file
  * to get the database config
  */
-Bootstrapper::init(__DIR__);
+Bootstrapper::init($workdir);
 
 /** 
  * The Initial and Default Phinx Config
@@ -17,11 +19,11 @@ Bootstrapper::init(__DIR__);
  */
 $config = [
     'paths' => [
-        'migrations' => __DIR__ . '/db/migrations',
-        'seeds' => __DIR__ . '/db/seeds'
+        'migrations' => "$workdir/db/migrations",
+        'seeds' => "$workdir/db/seeds"
     ],
     'environments' => [
-        'default_migration_table' => 'phinxlog'
+        'default_migration_table' => 'migration_logs'
     ],
     'version_order' => 'creation'
 ];
