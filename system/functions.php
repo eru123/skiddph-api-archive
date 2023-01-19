@@ -1,6 +1,7 @@
 <?php
 
 use SkiddPH\Core\Config;
+use SkiddPH\Helper\Date;
 
 /**
  * Access Global Config
@@ -33,8 +34,8 @@ function cfg(...$args)
  * @return  mixed
  */
 function sys($key = null, $value = null, $default = null)
-{   
-    $key = empty($key) ? '' : '.'.$key;
+{
+    $key = empty($key) ? '' : '.' . $key;
     $key = 'system' . $key;
     if (isset($value)) {
         Config::set($key, $value);
@@ -97,4 +98,38 @@ function sess($key, $value = null, $default = null)
 function e($key, $default = null)
 {
     return empty($_ENV[$key]) ? $default : $_ENV[$key];
+}
+
+/**
+ * Get workdir path
+ * @return string
+ */
+function workdir()
+{
+    return sys('workdir');
+}
+
+/**
+ * Get configdir path
+ * @return string
+ */
+function configdir()
+{
+    return sys('configdir');
+}
+
+/**
+ * Date time initializer
+ * @return void
+ */
+function datetime_init()
+{
+    // Set Timezone
+    $tz = sys('timezone', sys('plugins.app.timezone', date_default_timezone_get()));
+    date_default_timezone_set($tz);
+
+    // Set Date and Time
+    sys('time', time());
+    sys('date', date('Y-m-d H:i:s', sys('time')));
+    Date::setTime(sys('time'));
 }
