@@ -1,0 +1,52 @@
+<?php
+
+if (!$argv) {
+    die('This script must be run from the command line.');
+}
+
+$phinx = __DIR__ . '/vendor/bin/phinx';
+$data = & $argv;
+
+while ($data[0] !== 'artisan') {
+    array_shift($data);
+}
+
+array_shift($data);
+
+$cmd = array_shift($data);
+
+function __phinx()
+{
+    global $data, $phinx, $cmd;
+    $cmd = substr($cmd, 2);
+    array_unshift($data, $cmd);
+    $args = implode(' ', $data);
+    $cmd = "php $phinx $args";
+    passthru($cmd);
+}
+
+function __migrate()
+{
+    global $data, $phinx;
+    $args = implode(' ', $data);
+    $cmd = "php $phinx migrate $args";
+    passthru($cmd);
+}
+
+function __reset()
+{
+    global $phinx;
+    $cmd = "php $phinx rollback -t 0 && php $phinx migrate";
+    passthru($cmd);
+}
+
+function __rollback()
+{
+    global $data, $phinx;
+    $args = implode(' ', $data);
+    $args = empty($args) ? '-t 0' : $args;
+    $cmd = "php $phinx rollback $args";
+    passthru($cmd);
+}
+
+(function_exists('__' . $cmd) ? '__' . $cmd : '__phinx')();
