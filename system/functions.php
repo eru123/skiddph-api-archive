@@ -129,7 +129,8 @@ function datetime_init()
     date_default_timezone_set($tz);
 
     // Set Date and Time
-    sys('time', time());
+    sys('ms', microtime(true));
+    sys('time', floor(sys('ms')));
     sys('date', date('Y-m-d H:i:s', sys('time')));
     Date::setTime(sys('time'));
 }
