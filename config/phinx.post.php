@@ -2,16 +2,13 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-use SkiddPH\Core\Bootstrapper;
-use SkiddPH\Plugin\Database\Database;
-
 $workdir = __DIR__ . '/..';
 
 /**
  * Load the config.php file
  * to get the database config
  */
-Bootstrapper::init($workdir);
+\SkiddPH\Core\Bootstrapper::init($workdir);
 
 /** 
  * The Initial and Default Phinx Config
@@ -32,7 +29,7 @@ $config = [
  * Transform the config to Phinx Config 
  * @var mixed $phinx 
  */
-$phinx = Database::phinxConfig();
+$phinx = \SkiddPH\Plugin\DB\DB::phinxConfig();
 
 // Merge the config
 $config['environments'] = array_merge($config['environments'], $phinx);
