@@ -4,6 +4,7 @@ namespace SkiddPH\Plugin\DB;
 
 use Exception;
 use PDO;
+use PDOStatement;
 
 class DB
 {
@@ -19,7 +20,7 @@ class DB
      */
     final static function connect(string $key = null): PDO
     {
-        $key = $key ?? pcfg('database.database', 'default');
+        $key = !empty($key) ? $key : pcfg('database.database', 'default');
         if (!isset(self::$connections[$key])) {
             $pdo_args = pcfg("database.databases.$key", null);
             if ($pdo_args === null) {
@@ -121,9 +122,40 @@ class DB
 
         return $phinx;
     }
-
+    /**
+     * Generate a Raw SQL Query
+     * @param   string  $sql    The SQL Query
+     * @param   array   $params The Parameters
+     * @return  Raw
+     */
     final static function raw(string $sql, array $params = []): Raw
     {
         return new Raw($sql, $params);
+    }
+    /**
+     * SQL Raw Query Executor
+     * @param   string  $sql    The SQL Query
+     * @param   array   $params The Parameters
+     * @param   mixed   $pdo    The PDO Instance or the Key of the Database Connection. Can be a string for DB::connect, an SQL Arguments array, a PDO instance or null for default
+     * @param   mixed   $ref    The Reference of the PDO Instance
+     * @return  PDOStatement
+     */
+    final static function query($sql, $params, $pdo = null, &$ref)
+    {
+        if (empty($pdo) || !empty($pdo) && is_string($pdo)) {
+            $pdo = static::connect(empty($pdo) ? null : $pdo);
+        } else if (is_array($pdo)) {
+            $pdo = new PDO(...$pdo);
+        }
+
+        if (!$pdo instanceof PDO) {
+            throw new Exception("Invalid PDO Instance");
+        }
+
+        $ref = $pdo;
+        $sql = new Raw($sql, $params);
+        $stmt = $ref->prepare((string) $sql);
+        $stmt->execute();
+        return $stmt;
     }
 }
