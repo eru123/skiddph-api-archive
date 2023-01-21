@@ -8,6 +8,8 @@ use SkiddPH\Plugin\DB\DB;
 
 Bootstrapper::init(__DIR__);
 
-DB::query('SELECT * FROM auth_users WHERE ?', [1], null, $pdo);
-
-var_dump($pdo);
+$user = new User();
+var_dump(
+    $user->get(),
+    $user->lastQuery(),
+);

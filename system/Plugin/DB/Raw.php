@@ -39,12 +39,10 @@ class Raw
             }
         }
     }
-
     public function __toString(): string
     {
         return $this->query ?? $this->sql;
     }
-
     public function __invoke(): string
     {
         return $this->__toString();

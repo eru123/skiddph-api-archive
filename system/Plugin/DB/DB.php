@@ -137,10 +137,10 @@ class DB
      * @param   string  $sql    The SQL Query
      * @param   array   $params The Parameters
      * @param   mixed   $pdo    The PDO Instance or the Key of the Database Connection. Can be a string for DB::connect, an SQL Arguments array, a PDO instance or null for default
-     * @param   mixed   $ref    The Reference of the PDO Instance
+     * @param   PDO|null   $ref    The Reference of the PDO Instance
      * @return  PDOStatement
      */
-    final static function query($sql, $params, $pdo = null, &$ref)
+    final static function query($sql, $params, $pdo = null, &$ref = null)
     {
         if (empty($pdo) || !empty($pdo) && is_string($pdo)) {
             $pdo = static::connect(empty($pdo) ? null : $pdo);
@@ -154,7 +154,7 @@ class DB
 
         $ref = $pdo;
         $sql = new Raw($sql, $params);
-        $stmt = $ref->prepare((string) $sql);
+        $stmt = $pdo->prepare($sql);
         $stmt->execute();
         return $stmt;
     }
