@@ -21,17 +21,13 @@ abstract class Model
         'joins' => null,
         'data' => null,
     ];
-
     protected $last_query = null;
-
     protected $last_call = null;
-
     /**
      * PDO variable can be a string for DB::connect(), a PDO Argument array, or a PDO instance.
      * @var string|array|PDO
      */
     protected $pdo = 'default';
-
     final public static function __callStatic($name, $arguments)
     {
         $fun = "f__$name";
@@ -42,7 +38,6 @@ abstract class Model
 
         throw new Exception("Method not found: $name");
     }
-
     final public function __call($name, $arguments)
     {
         $fun = "f__$name";
@@ -52,7 +47,6 @@ abstract class Model
 
         throw new Exception("Method not found: $name");
     }
-
     /**
      * Get PDO instance
      * @throws Exception
@@ -77,7 +71,26 @@ abstract class Model
 
         throw new Exception('Invalid PDO value for Model');
     }
+    /**
+     * Get fillable fields
+     * @return array<string>
+     */
+    final protected function f__fillable()
+    {
+        if (empty($this->fillable)) {
+            return [];
+        }
 
+        return $this->fillable;
+    }
+    /**
+     * Get primary key
+     * @return string
+     */
+    final protected function f__primaryKey()
+    {
+        return $this->primary_key;
+    }
     /**
      * Summary of Wwhere
      * @param Raw|string        $key
@@ -146,7 +159,28 @@ abstract class Model
         $this->query['where'][] = new Raw("$key $operator $value");
         return $this;
     }
-
+    /**
+     * AND Where
+     * @param Raw|string        $key
+     * @param string|null       $operator
+     * @param array|string|null $value
+     * @return static
+     */
+    final protected function f__andWhere($key, $operator = null, $value = null)
+    {
+        return $this->f__where($key, $operator, $value, 'AND');
+    }
+    /**
+     * OR Where
+     * @param Raw|string        $key
+     * @param string|null       $operator
+     * @param array|string|null $value
+     * @return static
+     */
+    final protected function f__orWhere($key, $operator = null, $value = null)
+    {
+        return $this->f__where($key, $operator, $value, 'OR');
+    }
     /**
      * Limit the number of results returned.
      * @param int $limit
@@ -161,7 +195,6 @@ abstract class Model
         }
         return $this;
     }
-
     /**
      * Offset the number of results returned.
      * @param int $offset
@@ -172,7 +205,6 @@ abstract class Model
         $this->query['offset'] = $offset;
         return $this;
     }
-
     /**
      * Select the columns to return.
      * @param array<array|string|Raw> $columns
@@ -207,7 +239,29 @@ abstract class Model
 
         throw new Exception('Invalid select columns');
     }
+    /**
+     * Add Data to the query.
+     * @param array $data
+     * @return static
+     */
+    final protected function f__data($data)
+    {
+        if (empty($this->query['data'])) {
+            $this->query['data'] = [];
+        }
 
+        if (is_array($data)) {
+            if (array_keys($data) !== range(0, count($data) - 1)) {
+                $this->query['data'][] = $data;
+                return $this;
+            }
+
+            $this->query['data'] = array_merge($this->query['data'], $data);
+            return $this;
+        }
+
+        throw new Exception('Invalid data');
+    }
     /**
      * Order the results by a column.
      * @param string|Raw $column
@@ -237,7 +291,6 @@ abstract class Model
         $this->query['order'][] = new Raw("`$column` $direction");
         return $this;
     }
-
     final protected function f__get_select()
     {
         if (empty($this->query['select'])) {
@@ -254,7 +307,6 @@ abstract class Model
 
         throw new Exception('Invalid select columns');
     }
-
     final protected function f__get_where()
     {
         if (empty($this->query['where'])) {
@@ -267,16 +319,18 @@ abstract class Model
 
         return 'WHERE ' . $this->query['where'];
     }
-
     final protected function f__get_from()
     {
         if (empty($this->table)) {
             throw new Exception('Table not set');
         }
 
-        return "FROM $this->table";
-    }
+        if ($this->table instanceof Raw) {
+            return "FROM $this->table";
+        }
 
+        return DB::raw("FROM `" . $this->table . "`");
+    }
     final protected function f__get_limit()
     {
         if (empty($this->query['limit'])) {
@@ -290,7 +344,6 @@ abstract class Model
 
         return $query;
     }
-
     final protected function f__get_order()
     {
         if (empty($this->query['order'])) {
@@ -299,14 +352,16 @@ abstract class Model
 
         return 'ORDER BY ' . implode(', ', $this->query['order']);
     }
-
     final protected function f__lastQuery()
     {
         return $this->last_query;
     }
-
-    final protected function f__getSql()
+    final protected function f__getSql(...$where)
     {
+        if (!empty($where)) {
+            $this->f__where(...$where);
+        }
+
         $select = $this->f__get_select();
         $from = $this->f__get_from();
         $where = $this->f__get_where();
@@ -314,39 +369,28 @@ abstract class Model
         $order = $this->f__get_order();
         return "$select $from $where $order $limit";
     }
-
     final protected function f__get(...$where)
-    {   
-        if (!empty($where)) {
-            $this->f__where(...$where);
-        }
-
+    {
         $this->last_call = 'get';
-        $query = $this->f__getSql();
+        $query = $this->f__getSql(...$where);
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-
     final protected function f__first(...$where)
     {
-        if (!empty($where)) {
-            $this->f__where(...$where);
-        }
-
         $this->last_call = 'first';
-        $query = $this->f__getSql();
+        $query = $this->f__getSql(...$where);
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
     final protected function f__find(...$where)
-    {       
+    {
         if (empty($where)) {
             throw new Exception('Please provide id to find or a where arguments');
         }
@@ -371,5 +415,173 @@ abstract class Model
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+    final protected function f__insertSql($data = null)
+    {
+        if (!empty($data)) {
+            $this->f__data($data);
+        }
+
+        if (empty($this->query['data']) || !is_array($this->query['data'])) {
+            throw new Exception('No data to insert');
+        }
+
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        $fillable = [];
+        $data = (array) $this->query['data'];
+        if (!empty($this->fillable)) {
+            $fillable = $this->fillable;
+        } else {
+            foreach ($data as $key => $value) {
+                $keys = array_keys((array) $value);
+                $fillable = array_merge($fillable, $keys);
+            }
+        }
+        $fillable = array_unique($fillable, SORT_REGULAR);
+        $columns = array_map(function ($value) {
+            return "`$value`";
+        }, $fillable);
+
+        $from = $this->f__get_from();
+        $query = "INSERT $from (" . implode(', ', $columns) . ") VALUES ";
+        $rows = [];
+        foreach ($data as $row) {
+            $values = [];
+            foreach ($fillable as $column) {
+                if (isset($row[$column]) && $row[$column] instanceof Raw) {
+                    $values[] = $row[$column];
+                    continue;
+                }
+
+                if (!isset($row[$column]) || is_null($row[$column])) {
+                    $values[] = 'NULL';
+                    continue;
+                }
+
+                $values[] = DB::raw('?', [$row[$column]]);
+            }
+            $rows[] = '(' . implode(', ', $values) . ')';
+        }
+
+        return $query . implode(', ', $rows);
+    }
+    final protected function f__insert($data = null)
+    {
+        $this->last_call = 'insert';
+        $rows = count((array) $this->query['data']);
+        $query = $this->f__insertSql($data);
+        $this->last_query = $query;
+        $pdo = $this->f__pdo();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+
+        if ($rows > 1) {
+            return $stmt->rowCount();
+        }
+
+        return $pdo->lastInsertId();
+    }
+    final protected function f__updateSql($data = null)
+    {
+        if (!empty($data)) {
+            $this->f__data($data);
+        }
+
+        if (empty($this->query['data']) || !is_array($this->query['data'])) {
+            throw new Exception('No data to update');
+        }
+
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        $data = (array) $this->query['data'];
+        $row = array_shift($data);
+        $columns = [];
+        foreach ($row as $column => $value) {
+            if ($value instanceof Raw) {
+                $columns[] = "`$column` = $value";
+                continue;
+            }
+
+            if (is_null($value)) {
+                $columns[] = "`$column` = NULL";
+                continue;
+            }
+
+            $columns[] = DB::raw("`$column` = ?", [$value]);
+        }
+
+        $from = $this->f__get_from();
+        $where = $this->f__get_where();
+        return "UPDATE $from SET " . implode(', ', $columns) . " $where";
+    }
+    final protected function f__update($data = null)
+    {
+        $this->last_call = 'update';
+        $query = $this->f__updateSql($data);
+        $this->last_query = $query;
+        $pdo = $this->f__pdo();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+    final protected function f__deleteSql()
+    {
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        $from = $this->f__get_from();
+        $where = $this->f__get_where();
+        return "DELETE $from $where";
+    }
+    final protected function f__delete()
+    {
+        $this->last_call = 'delete';
+        $query = $this->f__deleteSql();
+        $this->last_query = $query;
+        $pdo = $this->f__pdo();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
+    final protected function f__countSql()
+    {
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        $from = $this->f__get_from();
+        $where = $this->f__get_where();
+        return "SELECT COUNT(*) AS `count` $from $where";
+    }
+    final protected function f__count()
+    {
+        $this->last_call = 'count';
+        $query = $this->f__countSql();
+        $this->last_query = $query;
+        $pdo = $this->f__pdo();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result['count'];
+    }
+    final protected function f__fieldsSql()
+    {
+        return "SHOW COLUMNS FROM `{$this->table}`";
+    }
+    final protected function f__fields()
+    {
+        $this->last_call = 'fields';
+        $query = $this->f__fieldsSql();
+        $this->last_query = $query;
+        $pdo = $this->f__pdo();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

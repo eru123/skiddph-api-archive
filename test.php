@@ -8,8 +8,8 @@ use SkiddPH\Plugin\DB\DB;
 
 Bootstrapper::init(__DIR__);
 
-$user = new User();
+// $user = new User();
 var_dump(
-    $user->get(),
-    $user->lastQuery(),
+    User::where('id', 1)
+        ->deleteSql()
 );

@@ -7,15 +7,19 @@ use Exception;
 class Row
 {
     protected $update = [];
+    protected $data = [];
+    protected $model = null;
+
     /**
      * Row constructor.
      * @param Model $model
      * @param array<string> $fields
      * @param array<string, mixed> $data
      */
-    public function __construct(protected $model, protected readonly $fields, protected readonly $data)
+    public function __construct($model, $data)
     {
-        
+        $this->model = $model;
+        $this->data = $data;
     }
 
     /**
@@ -26,9 +30,7 @@ class Row
      */
     final public function __set($name,  $value)
     {
-        if (in_array($name, $this->fields)) {
-            $this->update[$name] = $value;
-        }
+        $this->update[$name] = $value;
     }
 
     /**
@@ -44,5 +46,18 @@ class Row
         }
 
         throw new Exception("Field not found: $name");
+    }
+
+    /**
+     * Update row
+     * @return bool
+     */
+    public function update()
+    {
+        if (empty($this->update)) {
+            return true;
+        }
+
+        return true;
     }
 }
