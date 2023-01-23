@@ -21,15 +21,15 @@ class DB
     final static function connect(string $key = null): PDO
     {
         $key = !empty($key) ? $key : pcfg('database.database', 'default');
-        if (!isset(self::$connections[$key])) {
+        if (!isset(static::$connections[$key])) {
             $pdo_args = pcfg("database.databases.$key", null);
             if ($pdo_args === null) {
                 throw new Exception("Database connection not found: $key");
             }
-            self::$connections[$key] = new PDO(...$pdo_args);
+            static::$connections[$key] = new PDO(...$pdo_args);
         }
 
-        return self::$connections[$key];
+        return static::$connections[$key];
     }
     /**
      * Remove a database connection.
@@ -38,8 +38,8 @@ class DB
      */
     final static function disconnect(string $key): void
     {
-        self::$connections[$key] = null;
-        unset(self::$connections[$key]);
+        static::$connections[$key] = null;
+        unset(static::$connections[$key]);
     }
     /**
      * Generate Phinx Environment Configs

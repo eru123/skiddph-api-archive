@@ -8,19 +8,8 @@ use PDO;
 abstract class Model
 {
     protected $table = null;
-    protected $primary_key = null;
     protected $fillable = [];
-    protected $query = [
-        'select' => null,
-        'where' => null,
-        'order' => null,
-        'limit' => null,
-        'offset' => null,
-        'group' => null,
-        'having' => null,
-        'joins' => null,
-        'data' => null,
-    ];
+    protected $query = [];
     protected $last_query = null;
     protected $last_call = null;
     /**
@@ -28,10 +17,16 @@ abstract class Model
      * @var string|array|PDO
      */
     protected $pdo = 'default';
+    protected static $fields = null;
+    protected static $primary_key = null;
+    final public function __construct()
+    {
+        $this->f__new();
+    }
     final public static function __callStatic($name, $arguments)
     {
         $fun = "f__$name";
-        $obj = new static();
+        $obj = new static ();
         if (method_exists($obj, $fun)) {
             return call_user_func_array([$obj, $fun], $arguments);
         }
@@ -65,7 +60,7 @@ abstract class Model
 
         if (is_array($this->pdo)) {
             $this->pdo = new PDO(...$this
-                ->pdo);
+                    ->pdo);
             return $this->pdo;
         }
 
@@ -89,7 +84,8 @@ abstract class Model
      */
     final protected function f__primaryKey()
     {
-        return $this->primary_key;
+        $this->f__fields();
+        return static::$primary_key;
     }
     /**
      * Summary of Wwhere
@@ -113,12 +109,17 @@ abstract class Model
             $key = "`$key`";
         }
 
+        if (is_string($key) && is_null($operator)) {
+            $operator = 'is_null';
+            $value = '';
+        }
+
         if (!is_null($operator) and is_null($value)) {
             $value = $operator;
             $operator = $value instanceof Raw ? '' : '=';
         }
 
-        $operator = strtoupper($operator);
+        $operator = strtoupper((string) $operator);
 
         if (in_array($operator, ['BETWEEN']) && is_array($value)) {
             $operator = 'BETWEEN';
@@ -331,6 +332,30 @@ abstract class Model
 
         return DB::raw("FROM `" . $this->table . "`");
     }
+    final protected function f__get_into()
+    {
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        if ($this->table instanceof Raw) {
+            return "INTO $this->table";
+        }
+
+        return DB::raw("INTO `" . $this->table . "`");
+    }
+    final protected function f__get_update_from()
+    {
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        if ($this->table instanceof Raw) {
+            return "UPDATE $this->table";
+        }
+
+        return DB::raw("UPDATE `" . $this->table . "`");
+    }
     final protected function f__get_limit()
     {
         if (empty($this->query['limit'])) {
@@ -367,7 +392,9 @@ abstract class Model
         $where = $this->f__get_where();
         $limit = $this->f__get_limit();
         $order = $this->f__get_order();
-        return "$select $from $where $order $limit";
+        $sql = "$select $from $where $order $limit";
+        echo $sql, PHP_EOL;
+        return $sql;
     }
     final protected function f__get(...$where)
     {
@@ -387,7 +414,8 @@ abstract class Model
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? new Row($this, $result) : null;
     }
     final protected function f__find(...$where)
     {
@@ -445,8 +473,8 @@ abstract class Model
             return "`$value`";
         }, $fillable);
 
-        $from = $this->f__get_from();
-        $query = "INSERT $from (" . implode(', ', $columns) . ") VALUES ";
+        $into = $this->f__get_into();
+        $query = "INSERT $into (" . implode(', ', $columns) . ") VALUES ";
         $rows = [];
         foreach ($data as $row) {
             $values = [];
@@ -473,6 +501,7 @@ abstract class Model
         $this->last_call = 'insert';
         $rows = count((array) $this->query['data']);
         $query = $this->f__insertSql($data);
+        echo $query, PHP_EOL;
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
@@ -515,35 +544,41 @@ abstract class Model
             $columns[] = DB::raw("`$column` = ?", [$value]);
         }
 
-        $from = $this->f__get_from();
+        $from = $this->f__get_update_from();
         $where = $this->f__get_where();
-        return "UPDATE $from SET " . implode(', ', $columns) . " $where";
+        return "$from SET " . implode(', ', $columns) . " $where";
     }
     final protected function f__update($data = null)
     {
         $this->last_call = 'update';
         $query = $this->f__updateSql($data);
         $this->last_query = $query;
+        echo $query, PHP_EOL;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         return $stmt->rowCount();
     }
-    final protected function f__deleteSql()
+    final protected function f__deleteSql(...$where)
     {
         if (empty($this->table)) {
             throw new Exception('Table not set');
+        }
+
+        if (!empty($where)) {
+            $this->f__where(...$where);
         }
 
         $from = $this->f__get_from();
         $where = $this->f__get_where();
         return "DELETE $from $where";
     }
-    final protected function f__delete()
+    final protected function f__delete(...$where)
     {
         $this->last_call = 'delete';
-        $query = $this->f__deleteSql();
+        $query = $this->f__deleteSql(...$where);
         $this->last_query = $query;
+        echo $query, PHP_EOL;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
@@ -572,16 +607,71 @@ abstract class Model
     }
     final protected function f__fieldsSql()
     {
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
         return "SHOW COLUMNS FROM `{$this->table}`";
     }
     final protected function f__fields()
     {
+        if (!empty(static::$fields)) {
+            return static::$fields;
+        }
+
         $this->last_call = 'fields';
         $query = $this->f__fieldsSql();
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $fields = [];
+        foreach ($result as $row) {
+            $fields[] = $row['Field'];
+            if ($row['Key'] == 'PRI') {
+                static::$primary_key = $row['Field'];
+            }
+        }
+
+        static::$fields = $fields;
+        return $fields;
+    }
+    final protected function f__new()
+    {
+        $this->query = [
+            'select' => null,
+            'where' => null,
+            'order' => null,
+            'limit' => null,
+            'offset' => null,
+            'group' => null,
+            'having' => null,
+            'joins' => null,
+            'data' => null,
+        ];
+
+        $this->last_call = null;
+        $this->last_query = null;
+        return $this;
+    }
+    final protected function f__create()
+    {
+        return new Row($this, []);
+    }
+    final protected function f__begin()
+    {
+        $this->f__pdo()->beginTransaction();
+        return $this;
+    }
+    final protected function f__commit()
+    {
+        $this->f__pdo()->commit();
+        return $this;
+    }
+    final protected function f__rollback()
+    {
+        $this->f__pdo()->rollBack();
+        return $this;
     }
 }
