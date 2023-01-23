@@ -13,7 +13,7 @@ return [
     /**
      * Upload Directory - For Local Storage Connector
      */
-    'upload_dir' => __DIR__ . '/../uploads',
+    'upload_dir' => workdir() . '/uploads',
     /**
      * Time to Live for S3 Bucket URL
      */
