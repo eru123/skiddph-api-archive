@@ -50,8 +50,11 @@ class Row
 
     final protected function use_where(&$model)
     {
-        if ($model->primaryKey()) {
-            $model->where($model->primaryKey(), $this->data[$model->primaryKey()]);
+        $data = $this->filtered_data();
+        $primary_key = $model->primaryKey();
+
+        if ($primary_key) {
+            $model->where($primary_key, $data[$primary_key]);
         } else {
             foreach ($this->data as $k => $v) {
                 if (!$v instanceof Raw) {
@@ -59,6 +62,51 @@ class Row
                 }
             }
         }
+    }
+
+    final protected function filtered_data()
+    {
+        $fields = $this->model->fields();
+        $fillable = $this->model->fillable();
+
+        $allowed = empty($fillable) ? $fields : $fillable;
+        $allowed = array_fill_keys($allowed, true);
+
+        $data = $this->data;
+        foreach ($data as $k => $v) {
+            if (!isset($allowed[$k])) {
+                unset($data[$k]);
+            }
+        }
+
+        return $data;
+    }
+
+    final protected function to_insert_data()
+    {
+        $fields = $this->model->fields();
+        $fillable = $this->model->fillable();
+
+        $allowed = empty($fillable) ? $fields : $fillable;
+        $allowed = array_fill_keys($allowed, true);
+
+        $data = array_merge($this->data, $this->update);
+        foreach ($data as $k => $v) {
+            if (!isset($allowed[$k])) {
+                unset($data[$k]);
+            }
+        }
+
+        return $data;
+    }
+
+    final protected function set_primary_key($value)
+    {
+        $primary_key = $this->model->primaryKey();
+        if ($primary_key) {
+            $this->data[$primary_key] = $value;
+        }
+        return $this;
     }
 
     /**
@@ -69,9 +117,7 @@ class Row
     final public function update($data = [])
     {
         $model = $this->model->new();
-        foreach ($this->data as $k => $v) {
-            $model->where($k, $v);
-        }
+        $this->use_where($model);
         if (empty($this->update) || !$model->update(array_merge($this->update, $data))) {
             return false;
         }
@@ -87,9 +133,7 @@ class Row
     final public function delete()
     {
         $model = $this->model->new();
-        foreach ($this->data as $k => $v) {
-            $model->where($k, $v);
-        }
+        $this->use_where($model);
         return !!$model->delete();
     }
 
@@ -118,30 +162,20 @@ class Row
      */
     final public function save($data = [])
     {
-        $fields = $this->model->fields();
-        $fillable = $this->model->fillable();
-
-        $allowed = empty($fillable) ? $fields : $fillable;
-        $allowed = array_fill_keys($allowed, true);
-
-        $data = array_merge($this->update, $data);
-        if (empty($this->update)) {
+        $this->update = array_merge($this->update, $data);
+        $data = $this->to_insert_data();
+        if (empty($data)) {
             return false;
         }
 
-        foreach ($data as $k => $v) {
-            if (!isset($allowed[$k])) {
-                unset($data[$k]);
-            }
-        }
-
         $insert = $this->model->new()->insert($data);
+        $this->set_primary_key($insert);
         if (!$insert) {
             return false;
         }
 
         $model = $this->model->new();
-
+        $this->use_where($model);
 
         $this->data = $model->first()->array();
         $this->update = [];
