@@ -134,7 +134,12 @@ class Row
     {
         $model = $this->model->new();
         $this->use_where($model);
-        return !!$model->delete();
+        if (!!$model->delete()) {
+            $this->data = [];
+            $this->update = [];
+            return true;
+        }
+        return false;
     }
 
     /**

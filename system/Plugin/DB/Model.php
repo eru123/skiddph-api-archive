@@ -26,7 +26,7 @@ abstract class Model
     final public static function __callStatic($name, $arguments)
     {
         $fun = "f__$name";
-        $obj = new static ();
+        $obj = new static();
         if (method_exists($obj, $fun)) {
             return call_user_func_array([$obj, $fun], $arguments);
         }
@@ -60,7 +60,7 @@ abstract class Model
 
         if (is_array($this->pdo)) {
             $this->pdo = new PDO(...$this
-                    ->pdo);
+                ->pdo);
             return $this->pdo;
         }
 
@@ -404,7 +404,7 @@ abstract class Model
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return new Rows($this, $stmt->fetchAll(PDO::FETCH_ASSOC));
     }
     final protected function f__first(...$where)
     {
