@@ -2,12 +2,13 @@
 
 use SkiddPH\Core\HTTP\Router;
 use SkiddPH\Plugin\Auth\Controller as Auth;
+use SkiddPH\Controller\Auth as AuthController;
 use SkiddPH\Plugin\FileUploader\Controller as FileUploader;
 
 // AUTH PLUGIN
 $auth = new Router();
 $auth->base('/auth');
-$auth->post('/signin', [Auth::class, 'signin']);
+$auth->post('/signin', [AuthController::class, 'signin']);
 $auth->post('/signup', [Auth::class, 'signup']);
 $auth->post('/verify/resend/email', [Auth::class, 'resendEmail']);
 $auth->post('/verify/email/{verifyId}', [Auth::class, 'verifyEmail']);
