@@ -449,20 +449,22 @@ abstract class Model
         return $result ? new Row($this, $result) : null;
     }
     final protected function f__find(...$where)
-    {
+    {   
+        $this->f__fields();
+
         if (empty($where)) {
             throw new Exception('Please provide id to find or a where arguments');
-        }
-
-        if (empty($this->primary_key)) {
-            throw new Exception('Primary key not set');
         }
 
         if (empty($this->table)) {
             throw new Exception('Table not set');
         }
 
-        if (count($where) === 1 && is_numeric($where[0])) {
+        if (empty(static::$primary_key) && count($where) === 1) {
+            throw new Exception('Table has no primary key');
+        }
+
+        if (count($where) === 1) {
             $where = [$this->primary_key, $where[0]];
         }
 
