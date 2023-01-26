@@ -37,9 +37,13 @@ class Auth
             ],
         ]);
 
-        $user = User::find('user', $body['user']) ?: User::find(UserInfo::getUserIdByEmail($body['user']) ?? 0);
+        $user = User::find('user', $body['user']) ?: User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0);
 
         if (!$user) {
+            if(User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0)) {
+                throw new Exception('Email must be verified to use in login', 401);
+            }
+
             throw new Exception('User not found', 404);
         }
 
@@ -62,7 +66,7 @@ class Auth
 
         $token = JWT::encode($payload);
         $refresh = JWT::issue_refresh($token);
-        
+
         return [
             "success" => true,
             'data' => $data,
