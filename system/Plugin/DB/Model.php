@@ -420,7 +420,6 @@ abstract class Model
         $limit = $this->f__get_limit();
         $order = $this->f__get_order();
         $sql = "$select $from $where $order $limit";
-        echo $sql, PHP_EOL;
         return $sql;
     }
     final protected function f__get(...$where)
@@ -465,7 +464,7 @@ abstract class Model
         }
 
         if (count($where) === 1) {
-            $where = [$this->primary_key, $where[0]];
+            $where = [static::$primary_key, $where[0]];
         }
 
         $this->f__where(...$where);
@@ -534,7 +533,6 @@ abstract class Model
         $this->last_call = 'insert';
         $rows = count((array) $this->query['data']);
         $query = $this->f__insertSql($data);
-        echo $query, PHP_EOL;
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
@@ -586,7 +584,6 @@ abstract class Model
         $this->last_call = 'update';
         $query = $this->f__updateSql($data);
         $this->last_query = $query;
-        echo $query, PHP_EOL;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
@@ -611,7 +608,6 @@ abstract class Model
         $this->last_call = 'delete';
         $query = $this->f__deleteSql(...$where);
         $this->last_query = $query;
-        echo $query, PHP_EOL;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
