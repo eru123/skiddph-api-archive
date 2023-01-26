@@ -9,7 +9,7 @@ use SkiddPH\Plugin\Auth\Password;
 
 class UserRole extends Model
 {
-    protected $table = 'auth_users_info';
+    protected $table = 'auth_users_role';
 
     protected function f__from(int $user_id): array
     {
@@ -24,6 +24,21 @@ class UserRole extends Model
         }
 
         return $data;
+    }
+
+    protected function f__insertFor(int $user_id, $data): void
+    {
+        $new_data = [];
+        foreach ($data as $value) {
+            $new_data[] = [
+                'user_id' => $user_id,
+                'role' => strtoupper((string) $value),
+            ];
+        }
+
+        $this->new()
+            ->data($new_data)
+            ->insert();
     }
 
 }
