@@ -53,7 +53,7 @@ class Email
         try {
             $smtp = SMTP::use (pcfg('smtp.smtp', 'default'));
             $smtp->to($opts['email']);
-            $smtp->subject('Email Verification');
+            $smtp->subject("Email Verification: $code");
             $msg = !empty(@$opts['name']) ? 'Hi ' . $opts['name'] . ', ' : 'Hi, ';
             $msg .= !empty(@$opts['user']) ? 'with username @' . $opts['user'] . ', ' : '';
             $msg .= 'your verification code is ' . $code . '.';
