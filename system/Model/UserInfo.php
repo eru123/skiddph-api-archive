@@ -20,6 +20,22 @@ class UserInfo extends Model
             ->first();
     }
 
+    protected function f__insertFor(int $user_id, $data): void
+    {   
+        $new_data = [];
+        foreach ($data as $name => $value) {
+            $new_data[] = [
+                'user_id' => $user_id,
+                'name' => $name,
+                'value' => json_encode($value),
+            ];
+        }
+
+        $this->new()
+            ->data($new_data)
+            ->insert();
+    }
+
     protected function f__from(int $user_id): array
     {
         $user = $this->new()
@@ -31,7 +47,7 @@ class UserInfo extends Model
         foreach ($user as $row) {
             $name = $row['name'];
             $value = json_decode($row['value'], true);
-            if (!$data[$name]) {
+            if (!isset($data[$name])) {
                 $data[$name] = [];
             }
 
