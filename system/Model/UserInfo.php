@@ -11,11 +11,12 @@ class UserInfo extends Model
 {
     protected $table = 'auth_users_info';
 
-    protected function f__getUserIdByEmail(string $email): Row
+    protected function f__getUserIdBy(string $by, string $email): Row|null
     {
         return $this->new()
             ->select('user_id')
-            ->where('email', $email)
+            ->where('name', $by)
+            ->where('value', json_encode($email))
             ->first();
     }
 
@@ -37,7 +38,7 @@ class UserInfo extends Model
             $data[$name][] = $value;
         }
 
-        foreach($data as $name => $value) {
+        foreach ($data as $name => $value) {
             if (count($value) == 1) {
                 $data[$name] = $value[0];
             }
