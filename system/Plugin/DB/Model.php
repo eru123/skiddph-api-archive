@@ -474,7 +474,8 @@ abstract class Model
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? new Row($this, $result): null;
     }
     final protected function f__insertSql($data = null)
     {
@@ -684,9 +685,9 @@ abstract class Model
         $this->last_query = null;
         return $this;
     }
-    final protected function f__create()
+    final protected function f__create($data = [])
     {
-        return new Row($this, []);
+        return new Row($this, [], $data);
     }
     final protected function f__begin()
     {
