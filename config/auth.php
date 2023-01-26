@@ -38,4 +38,16 @@ return [
      * Email verification token expiration
      */
     'email_verification_expire_at' => 'now + 24mins',
+    /**
+     * Must be verified to use services
+     */
+    'email_must_verified' => true,
+    /**
+     * Auto email verification
+     */
+    'email_auto_verify' => true,
+    /**
+     * Allow sign up
+     */
+    'allow_signup' => true,
 ];
