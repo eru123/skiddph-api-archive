@@ -11,12 +11,12 @@ class User extends Model
 {
     protected $table = 'auth_users';
 
-    // public function set__hash($password)
-    // {
-    //     return Password::hash($password);
-    // }
+    public function set__hash($password)
+    {
+        return Password::hash($password);
+    }
 
-    public function verifyPassword($password, $row)
+    public function verifyPassword($password, Row $row)
     {
         return Password::verify($password, $row->hash);
     }
