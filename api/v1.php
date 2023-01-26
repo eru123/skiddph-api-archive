@@ -9,7 +9,7 @@ use SkiddPH\Plugin\FileUploader\Controller as FileUploader;
 $auth = new Router();
 $auth->base('/auth');
 $auth->post('/signin', [AuthController::class, 'signin']);
-$auth->post('/signup', [Auth::class, 'signup']);
+$auth->post('/signup', [AuthController::class, 'signup']);
 $auth->post('/verify/resend/email', [Auth::class, 'resendEmail']);
 $auth->post('/verify/email/{verifyId}', [Auth::class, 'verifyEmail']);
 $auth->post('/user/add/email', [Auth::class, 'addEmail']);
