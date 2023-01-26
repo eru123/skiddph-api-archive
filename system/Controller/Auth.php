@@ -6,6 +6,7 @@ use Exception;
 use SkiddPH\Model\User;
 use SkiddPH\Model\UserInfo;
 use SkiddPH\Model\UserRole;
+use SkiddPH\Plugin\Auth\Email;
 use SkiddPH\Plugin\DB\DB;
 use SkiddPH\Core\HTTP\Request;
 use SkiddPH\Plugin\Auth\JWT;
@@ -13,9 +14,9 @@ use SkiddPH\Plugin\Auth\Auth as Plugin;
 
 class Auth
 {
-    static function signin()
+    static function signin($data = [])
     {
-        $body = Request::bodySchema([
+        $body = empty($data) ? Request::bodySchema([
             'user' => [
                 'alias' => 'Username or Email',
                 'type' => 'string',
@@ -35,12 +36,12 @@ class Auth
                 'values' => [1, 7, 30],
                 'default' => 1,
             ],
-        ]);
+        ]) : $data;
 
         $user = User::find('user', $body['user']) ?: User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0);
 
         if (!$user) {
-            if(User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0)) {
+            if (User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0)) {
                 throw new Exception('Email must be verified to use in login', 401);
             }
 
@@ -73,5 +74,109 @@ class Auth
             'token' => $token,
             'refresh_token' => $refresh,
         ];
+    }
+    static function signup()
+    {
+        $body = Request::bodySchema([
+            'user' => [
+                'alias' => 'Username',
+                'type' => 'string',
+                'min' => 5,
+                'max' => 24,
+                'regex' => '/^[a-zA-Z0-9_]+$/',
+                'required' => true,
+            ],
+            'pass' => [
+                'alias' => 'Password',
+                'type' => 'string',
+                'min' => 8,
+                'required' => true,
+            ],
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'email',
+                'required' => true,
+            ],
+            'fname' => [
+                'alias' => 'First Name',
+                'type' => 'string',
+                'min' => 2,
+                'required' => true,
+            ],
+            'lname' => [
+                'alias' => 'Last Name',
+                'type' => 'string',
+                'min' => 2,
+                'required' => true,
+            ],
+        ]);
+
+        $body['hash'] = $body['pass'];
+        unset($body['pass']);
+
+        if (!pcfg('auth.allow_signup')) {
+            throw new Exception('Signup is disabled', 403);
+        }
+
+        if (UserInfo::getUserIdBy('email', $body['email'])) {
+            throw new Exception('Email already exists', 409);
+        }
+
+        if (!pcfg('auth.email_auto_verify')) {
+            $body['pending_email'] = $body['email'];
+            unset($body['email']);
+        }
+
+        if (User::find('user', $body['user'])) {
+            throw new Exception('Username already exists', 409);
+        }
+        User::begin();
+        try {
+            $user = User::create($body)->save();
+
+            if (pcfg('auth.email_must_verified') && !empty($body['pending_email'])) {
+                $email = new Email();
+                $verify_id = $email->code([
+                    'user_id' => $user->id,
+                    'email' => $body['pending_email'],
+                    'type' => Email::NEW_EMAIL,
+                    'user' => $user->user,
+                    'name' => $body['fname'] . ' ' . $body['lname'],
+                ]);
+            }
+
+            $to_info = ['email', 'pending_email', 'fname', 'lname'];
+            $info = array_filter($body, function ($key) use ($to_info) {
+                return in_array($key, $to_info);
+            }, ARRAY_FILTER_USE_KEY);
+            UserInfo::insertFor($user->id, $info);
+
+            $roles = $user->id === 1 ? ['SUPERADMIN'] : [];
+            UserRole::insertFor($user->id, $roles);
+
+            $res = static::signin([
+                'user' => $user->user,
+                'pass' => $body['hash'],
+                'remember' => 1,
+            ]);
+
+            if (isset($verify_id)) {
+                $res['success'] = "Successfully created user. Please check your email for verification code.";
+                $res['verify_id'] = $verify_id;
+            } else {
+                $res['success'] = "Successfully created user.";
+            }
+
+            User::commit();
+            return $res;
+        } catch (Exception $e) {
+            User::rollback();
+            $msg = $e->getMessage();
+            $cde = (int) $e->getCode();
+            if ($cde === 0) {
+                $msg = 'Failed to create user';
+            }
+            throw new Exception($msg, $e->getCode());
+        }
     }
 }
