@@ -45,7 +45,7 @@ return [
     /**
      * Auto email verification
      */
-    'email_auto_verify' => true,
+    'email_auto_verify' => false,
     /**
      * Allow sign up
      */
