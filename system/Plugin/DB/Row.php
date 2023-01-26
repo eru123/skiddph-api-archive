@@ -16,10 +16,11 @@ class Row
      * @param array<string> $fields
      * @param array<string, mixed> $data
      */
-    final public function __construct($model, $data)
+    final public function __construct(Model $model, array $data = [], array $update = [])
     {
         $this->model = $model;
         $this->data = $data;
+        $this->update = $update;
     }
 
     /**
@@ -189,16 +190,16 @@ class Row
         if (empty($data)) {
             return false;
         }
+        
+        $insert = $this->model->new()->data($data)->insert();
 
-        $insert = $this->model->new()->insert($data);
         $this->set_primary_key($insert);
         if (!$insert) {
             return false;
         }
-
+        
         $model = $this->model->new();
         $this->use_where($model);
-
         $this->data = $model->first()->array();
         $this->update = [];
         return $this;
