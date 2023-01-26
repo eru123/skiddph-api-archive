@@ -152,6 +152,13 @@ class SMTP
         $mail->SMTPAuth = true;
         $mail->Username = $this->smtp_opts['user'];
         $mail->Password = $this->smtp_opts['pass'];
+        $mail->SMTPOptions = [
+            'ssl' => [
+                'verify_peer' => false,
+                'verify_peer_name' => false,
+                'allow_self_signed' => true
+            ]
+        ];
 
         $mail->setFrom($this->smtp_opts['from'], $this->smtp_opts['from_name']);
         $mail->addReplyTo($this->smtp_opts['from'], $this->smtp_opts['from_name']);
