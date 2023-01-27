@@ -2,8 +2,8 @@
 
 namespace SkiddPH\Model;
 
+use SkiddPH\Helper\Date;
 use SkiddPH\Plugin\DB\Model;
-use SkiddPH\Plugin\DB\DB;
 use SkiddPH\Plugin\DB\Row;
 use SkiddPH\Plugin\Auth\Password;
 
@@ -32,16 +32,16 @@ class User extends Model
 
     public function insert__created_at()
     {
-        return DB::raw('NOW()');
+        return Date::parse('now', 'datetime');
     }
 
     public function insert__updated_at()
     {
-        return DB::raw('NOW()');
+        return Date::parse('now', 'datetime');
     }
 
     public function update__updated_at()
     {
-        return DB::raw('NOW()');
+        return Date::parse('now', 'datetime');
     }
 }
