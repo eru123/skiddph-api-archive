@@ -61,7 +61,7 @@ class Controller
         $verify_id = $email->code([
             'user_id' => $user_id,
             'email' => $body['pending_email'],
-            'type' => Email::NEW_EMAIL,
+            'type' => 'new',
             'user' => $username,
             'name' => $body['fname'] . ' ' . $body['lname'],
         ]);
@@ -116,7 +116,7 @@ class Controller
 
         $code = $body['code'];
         $email = new Email();
-        $email->verify($verify_id, $user['id'], $code, Email::NEW_EMAIL);
+        $email->verify($verify_id, $user['id'], $code, 'new');
         $login = Auth::directLoginWithID($user['id'], [], [], ['email']);
 
         return array_merge($login, [
@@ -142,7 +142,7 @@ class Controller
         $verify_id = $email->resend([
             'user_id' => $user['id'],
             'email' => $body['email'],
-            'type' => Email::NEW_EMAIL,
+            'type' => 'new',
             'user' => $user['user'],
             'name' => $user['fname'] . ' ' . $user['lname'],
         ]);
