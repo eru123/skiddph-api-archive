@@ -15,14 +15,14 @@ class SMTP
     public static function use (string $key = null): self
     {
         if (empty($key)) {
-            $key = pcfg('smtp.smtp');
+            $key = pcfg('smtp.smtp', 'default');
         }
         return new self($key);
     }
 
-    public function __construct(string $key)
+    public function __construct(string $key = null)
     {
-        $this->smtp_opts = pcfg('smtp.smtps.' . pcfg('smtp.smtp'));
+        $this->smtp_opts = pcfg('smtp.smtps.' . ($key ?: pcfg('smtp.smtp', 'default')));
 
         if (empty($this->smtp_opts)) {
             throw new Exception('Invalid SMTP configuration', 400);
@@ -161,7 +161,7 @@ class SMTP
         ];
 
         $mail->setFrom($this->smtp_opts['from'], $this->smtp_opts['from_name']);
-        $mail->addReplyTo($this->smtp_opts['from'], $this->smtp_opts['from_name']);
+        $mail->addReplyTo($this->smtp_opts['reply_to'], $this->smtp_opts['reply_to_name']);
 
         foreach ($this->to as $email) {
             $mail->addAddress($email);
@@ -184,5 +184,11 @@ class SMTP
         $mail->isHTML($is_html);
 
         return $mail->send();
+    }
+
+    public function override(array $opts): self
+    {
+        $this->smtp_opts = array_merge($this->smtp_opts, $opts);
+        return $this;
     }
 }
