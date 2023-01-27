@@ -2,11 +2,10 @@
 
 namespace SkiddPH\Plugin\GoogleDrive;
 
-use SkiddPH\Core\Plugin\DB as PluginDB;
 use SkiddPH\Plugin\Database\ORM;
 use SkiddPH\Plugin\Database\Database;
 
-class GoogleDrive implements PluginDB
+class GoogleDrive
 {
     const TB = 'plugin_google_drive';
     

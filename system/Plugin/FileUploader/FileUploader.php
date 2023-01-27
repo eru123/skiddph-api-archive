@@ -4,12 +4,11 @@ namespace SkiddPH\Plugin\FileUploader;
 
 use Exception;
 use SkiddPH\Helper\Date;
-use SkiddPH\Core\Plugin\DB as PluginDB;
 use SkiddPH\Plugin\Database\ORM;
 use SkiddPH\Plugin\Database\Database;
 use SkiddPH\Plugin\Auth\Auth;
 
-class FileUploader implements PluginDB
+class FileUploader
 {
     const TB = 'plugin_file_uploader';
     const CONNECTORS = [
