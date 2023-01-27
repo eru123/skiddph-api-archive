@@ -63,4 +63,28 @@ class UserInfo extends Model
         return $data;
     }
 
+    protected function f__isValueExists(string $name, string $value): bool
+    {
+        return $this->new()
+            ->where('name', $name)
+            ->where('value', json_encode($value))
+            ->count() > 0;
+    }
+
+    protected function f__removeFor(int $user_id, $data)
+    {
+        $del = $this->new()
+            ->where('user_id', $user_id);
+
+        foreach ($data as $name => $value) {
+            $del->where('name', $name);
+            if (is_array($value)) {
+                $del->where('value', 'in', array_map(fn($v) => json_encode($v), $value));
+            } else {
+                $del->where('value', json_encode($value));
+            }
+        }
+
+        return $del->delete();
+    }
 }

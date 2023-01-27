@@ -277,17 +277,20 @@ class JWT
 
     private static function handleJsonError(int $errno): void
     {
-        $messages = [
-            JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
-            JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
-            JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
-            JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
-            JSON_ERROR_UTF8 => 'Malformed UTF-8 characters'
-        ];
+        // $messages = [
+        //     JSON_ERROR_DEPTH => 'Maximum stack depth exceeded',
+        //     JSON_ERROR_STATE_MISMATCH => 'Invalid or malformed JSON',
+        //     JSON_ERROR_CTRL_CHAR => 'Unexpected control character found',
+        //     JSON_ERROR_SYNTAX => 'Syntax error, malformed JSON',
+        //     JSON_ERROR_UTF8 => 'Malformed UTF-8 characters'
+        // ];
+
         throw new Exception(
-            isset($messages[$errno])
-            ? $messages[$errno]
-            : 'Unknown JSON error: ' . $errno,
+            // isset($messages[$errno])
+            // ? $messages[$errno]
+            // : 'Unknown JSON error: ' . $errno,
+            'Invalid Token',
+            401
         );
     }
 

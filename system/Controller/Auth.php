@@ -3,6 +3,7 @@
 namespace SkiddPH\Controller;
 
 use Exception;
+use SkiddPH\Model\EmailVerification;
 use SkiddPH\Model\User;
 use SkiddPH\Model\UserInfo;
 use SkiddPH\Model\UserRole;
@@ -64,6 +65,36 @@ class Auth
 
         $payload['iat'] = 'now';
         $payload['exp'] = 'now + ' . $body['remember'] . ' days';
+
+        $token = JWT::encode($payload);
+        $refresh = JWT::issue_refresh($token);
+
+        return [
+            "success" => true,
+            'data' => $data,
+            'token' => $token,
+            'refresh_token' => $refresh,
+        ];
+    }
+    static function createSignIn($id)
+    {
+        $user = User::find($id);
+        if (!$user) {
+            throw new Exception('User not found', 404);
+        }
+
+        $info = UserInfo::from($user->id);
+        $roles = UserRole::from($user->id);
+
+        $data = array_merge($user->array(), $info, ['roles' => $roles]);
+        $jwt_fields = ['id', 'user', 'roles', 'email'];
+
+        $payload = array_filter($data, function ($key) use ($jwt_fields) {
+            return in_array($key, $jwt_fields);
+        }, ARRAY_FILTER_USE_KEY);
+
+        $payload['iat'] = 'now';
+        $payload['exp'] = 'now + 1 days';
 
         $token = JWT::encode($payload);
         $refresh = JWT::issue_refresh($token);
@@ -195,7 +226,7 @@ class Auth
                 'type' => 'email',
                 'required' => true,
             ],
-            'code' => [
+            'type' => [
                 'alias' => 'Email verification type',
                 'required' => true,
                 'type' => 'enum',
@@ -207,7 +238,7 @@ class Auth
         $verify_id = Email::send([
             'user_id' => isset($user['id']) ? $user['id'] : $user['user_id'],
             'email' => $body['email'],
-            'type' => isset($body['code']) ? $body['code'] : $body['type'],
+            'type' => $body['type'],
             'user' => $user['user'],
             'name' => isset($info['name']) ? trim($info['name']) : trim($info['fname'] . ' ' . $info['lname']),
         ]);
@@ -216,5 +247,53 @@ class Auth
             'success' => true,
             'verify_id' => $verify_id,
         ];
+    }
+    static function emailVerify($data = [])
+    {
+        if (isset($data['emailToken'])) {
+            $token = $data['emailToken'];
+            $data = JWT::decode($token);
+        }
+
+        if (isset($data['user_id'])) {
+            $user_id = $data['user_id'];
+        } else {
+            Plugin::guard();
+            $user_id = Plugin::user()['id'];
+        }
+
+        $body = empty($data) ? Request::bodySchema([
+            'code' => [
+                'alias' => 'Verification Code',
+                'type' => 'string',
+                'required' => true,
+            ],
+            'type' => [
+                'alias' => 'Verification Type',
+                'type' => 'enum',
+                'values' => ['new', 'reset'],
+                'required' => true,
+            ],
+            'verify_id' => [
+                'alias' => 'Verification ID',
+                'type' => 'string',
+                'required' => true,
+            ],
+        ]) : $data;
+
+        try {
+            UserInfo::begin();
+            $res = Email::verify(['user_id' => $user_id, 'id' => $body['verify_id'], 'type' => $body['type'], 'code' => $body['code']]);
+            UserInfo::commit();
+            return array_merge($res ?? ['success' => true]);
+        } catch (Exception $e) {
+            UserInfo::rollback();
+
+            if ($e->getCode() === 0) {
+                throw new Exception('Failed to verify emailx', 500);
+            }
+
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
     }
 }
