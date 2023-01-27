@@ -133,16 +133,14 @@ class Auth
         User::begin();
         try {
             $user = User::create($body)->save();
-
             if (pcfg('auth.email_must_verified') && !empty($body['pending_email'])) {
-                $email = new Email();
-                $verify_id = $email->code([
+                $verify_id = static::emailSend([
                     'user_id' => $user->id,
                     'email' => $body['pending_email'],
-                    'type' => Email::NEW_EMAIL,
+                    'type' => 'new',
                     'user' => $user->user,
                     'name' => $body['fname'] . ' ' . $body['lname'],
-                ]);
+                ])['verify_id'];
             }
 
             $to_info = ['email', 'pending_email', 'fname', 'lname'];
@@ -178,5 +176,45 @@ class Auth
             }
             throw new Exception($msg, $e->getCode());
         }
+    }
+    static function emailSend($data = [])
+    {
+        if (!empty($data)) {
+            $user_id = $data['user_id'];
+        } else {
+            Plugin::guard();
+            $user_id = Plugin::user()['id'];
+        }
+
+        $user = isset($data['user']) ? $data : User::find($user_id);
+        $info = (isset($data['fname']) && isset($data['lname']) || isset($data['name'])) ? $data : UserInfo::from($user_id);
+
+        $body = empty($data) ? Request::bodySchema([
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'email',
+                'required' => true,
+            ],
+            'code' => [
+                'alias' => 'Email verification type',
+                'required' => true,
+                'type' => 'enum',
+                'values' => ['new', 'reset'],
+                'default' => 'new',
+            ],
+        ]) : $data;
+
+        $verify_id = Email::send([
+            'user_id' => isset($user['id']) ? $user['id'] : $user['user_id'],
+            'email' => $body['email'],
+            'type' => isset($body['code']) ? $body['code'] : $body['type'],
+            'user' => $user['user'],
+            'name' => isset($info['name']) ? trim($info['name']) : trim($info['fname'] . ' ' . $info['lname']),
+        ]);
+
+        return [
+            'success' => true,
+            'verify_id' => $verify_id,
+        ];
     }
 }
