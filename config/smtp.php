@@ -38,6 +38,14 @@ return [
              */
             'from_name' => e('SMTP_FROM_NAME'),
             /**
+             * SMTP Reply To Email
+             */
+            'reply_to' => e('SMTP_REPLY_TO', e('SMTP_FROM')),
+            /**
+             * SMTP Reply To Name
+             */
+            'reply_to_name' => e('SMTP_REPLY_TO_NAME', e('SMTP_FROM_NAME')),
+            /**
              * SMTP Debug
              * 0 = off (for production use)
              * 1 = client messages
