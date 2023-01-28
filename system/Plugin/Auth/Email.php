@@ -4,271 +4,108 @@ namespace SkiddPH\Plugin\Auth;
 
 use SkiddPH\Helper\Date;
 use SkiddPH\Helper\Rand;
+use SkiddPH\Model\EmailVerification;
+use SkiddPH\Model\UserInfo;
+use SkiddPH\Plugin\DB\Row;
 use SkiddPH\Plugin\SMTP\SMTP;
-use SkiddPH\Plugin\Auth\Model\Email as EmailModel;
-use SkiddPH\Plugin\Auth\Model\Info as InfoModel;
-use SkiddPH\Plugin\Database\Helper;
 use Exception;
 
 class Email
 {
-    const NEW_EMAIL = 'NEW_EMAIL';
-    const RESET_PASSWORD = 'RESET_PASSWORD';
-    public static function use (): self
+    public static function send($data = []): int
     {
-        return new self();
-    }
-
-    public function code($opts): int
-    {
-        $required = ['user_id', 'email', 'type'];
+        $required = ['user_id', 'email', 'type', 'name', 'user'];
         foreach ($required as $key) {
-            if (empty($opts[$key])) {
+            if (empty($data[$key])) {
                 throw new Exception('Invalid ' . $key, 400);
             }
         }
 
-        $code = Rand::int(100000, 999999);
         $exp = pcfg('email_verification_expire_at', 'now + 24mins');
-        $data = [
-            'code' => $code,
-            'exp' => $exp
-        ];
-        $payload = array_merge($opts, $data);
-        $token = JWT::encode($payload);
-        $orm = Auth::db();
+        $verify = EmailVerification::where('user_id', $data['user_id'])
+            ->where('updated_at', 'lte', Date::parse(pcfg('auth.email_resend_if_time', 'now - 5mins'), 'datetime'))
+            ->where('updated_at', 'gte', Date::parse("now - ($exp)", 'datetime'))
+            ->where('type', $data['type'])
+            ->first();
+
+        if ($verify) {
+            return $verify->id;
+        }
+
+
 
         try {
-            $orm->begin();
-            $verify_id = EmailModel::new_code($opts['user_id'], $token);
+            $data['code'] = Rand::int(100000, 999999);
+            $verify_id = EmailVerification::newCode($data);
             if (!$verify_id) {
                 throw new Exception('Failed to create verification code', 500);
             }
-            $orm->commit();
-        } catch (Exception $e) {
-            $orm->rollback();
-            throw new Exception('Failed to create verification code', 500);
-        }
 
-        try {
-            $smtp = SMTP::use (pcfg('smtp.smtp', 'default'));
-            $smtp->to($opts['email']);
-            $smtp->subject('Email Verification');
-            $msg = !empty(@$opts['name']) ? 'Hi ' . $opts['name'] . ', ' : 'Hi, ';
-            $msg .= !empty(@$opts['user']) ? 'with username @' . $opts['user'] . ', ' : '';
-            $msg .= 'your verification code is ' . $code . '.';
-            $smtp->text($msg);
-            $smtp->send();
+            $data['token'] = JWT::encode([
+                'verify_id' => $verify_id,
+                'user_id' => $data['user_id'],
+                'code' => $data['code'],
+                'type' => $data['type'],
+                'exp' => $exp,
+                'iat' => 'now'
+            ]);
+
+            $email = SMTP::use ();
+            EmailTemplate::generate($email, $data);
+            $email->override(['from_name' => pcfg('app.name', 'App') . ' Security'])->send();
+
             return $verify_id;
         } catch (Exception $e) {
-            throw new Exception('Failed to send verification code', 500);
+            throw new Exception('Failed to create verification code', 500);
         }
     }
 
-    public function verify($verify_id, $user_id, $code, $type)
+    public static function verify(array $data)
     {
-        $verify = Auth::db()->table(EmailModel::TB)
-            ->where(['id' => $verify_id])
-            ->and()
-            ->where(['user_id' => $user_id])
-            ->readOne()
-            ->arr();
-
-        if (empty($verify)) {
-            throw new Exception('Invalid verification step', 401);
-        }
-
-
-        try {
-            $decoded = JWT::decode($verify['token']);
-        } catch (Exception $e) {
-            throw new Exception('Verification Expired', 401);
-        }
-
-        if (intval($decoded['code']) - intval($code) !== 0 || empty(intval($decoded['code'])) || $type != $decoded['type']) {
-            throw new Exception('Invalid verification code', 401);
-        }
-
-        $orm = Auth::db();
-
-        try {
-            $orm->begin();
-            $affected = $orm->table(InfoModel::TB)
-                ->where(['user_id' => $user_id])
-                ->and()
-                ->where(['name' => $orm->quote('pending_email')])
-                ->and()
-                ->where(['value' => $orm->quote(Helper::jsonEncode($decoded['email']))])
-                ->data([
-                    [
-                        'name' => 'email'
-                    ]
-                ])
-                ->update()
-                ->rowCount();
-
-            if (!$affected) {
-                throw new Exception('Invalid verification email', 400);
-            }
-
-            $orm->commit();
-        } catch (Exception $e) {
-            $orm->rollback();
-            throw new Exception('Failed to verify email', 500);
-        }
-
-        return true;
-    }
-
-    public function verifyNewEmail($verify_id, $user_id, $code)
-    {
-        return $this->verify($verify_id, $user_id, $code, self::NEW_EMAIL);
-    }
-
-    public function verifyResetPassword($verify_id, $user_id, $code)
-    {
-        return $this->verify($verify_id, $user_id, $code, self::RESET_PASSWORD);
-    }
-
-    public function resend($opts)
-    {
-        $required = ['user_id', 'email', 'type'];
+        $required = ['user_id', 'code', 'type'];
         foreach ($required as $key) {
-            if (empty($opts[$key])) {
+            if (empty((string) $data[$key])) {
                 throw new Exception('Invalid ' . $key, 400);
             }
         }
 
-        $emailObj = new EmailModel();
-        $verify = $emailObj->get([
-            'user_id' => $opts['user_id'],
-        ])->arr();
+        $exp = pcfg('email_verification_expire_at', 'now + 24mins');
+        $email = EmailVerification::where('user_id', $data['user_id'])
+            ->where('updated_at', 'gte', Date::parse("now - ($exp)", 'datetime'))
+            ->where('type', $data['type'])
+            ->where('code', $data['code'])
+            ->where('status', 0)
+            ->order('updated_at', 'desc')
+            ->first();
 
-        if (empty($verify)) {
-            return $this->code($opts);
+        if (!$email) {
+            throw new Exception('Invalid verification code', 400);
         }
 
-        if (Date::parse($verify['updated_at']) <= Date::parse('now - 5mins')) {
-            return $this->code($opts);
+        if (method_exists(static::class, 'onverify__' . $data['type'])) {
+            return static::{'onverify__' . $data['type']}($email);
         }
 
-        return $verify['id'];
+        throw new Exception('Invalid verification type', 400);
     }
 
-    public static function exists($email)
+    protected static function onverify__new(Row $email)
     {
-        $orm = Auth::db();
-        $user = $orm->table(InfoModel::TB)
-            ->where(['name' => $orm->quote('email')])
-            ->and()
-            ->where(['value' => $orm->quote(Helper::jsonEncode($email))])
-            ->readOne()
-            ->arr();
+        $email->status = 1;
+        $email->update();
 
-        if (empty($user)) {
-            return FALSE;
+        if (UserInfo::isValueExists('email', $email->email)) {
+            throw new Exception('Email already verified', 400);
         }
 
-        return $user['user_id'];
-    }
-
-    public function addEmail($user, $email)
-    {
-        if (empty($user)) {
-            throw new Exception('Invalid user', 400);
-        }
-
-        $orm = Auth::db();
-
-        if (is_array($user)) {
-            $user_id = $user['id'];
-        } else {
-            $user_id = $user;
-            $user = null;
-        }
-
-        try {
-            $orm->begin();
-            $affected = $orm->table(InfoModel::TB)
-                ->data([
-                    [
-                        'user_id' => $user_id,
-                        'name' => 'pending_email',
-                        'value' => Helper::jsonEncode($email)
-                    ]
-                ])
-                ->insert()
-                ->rowCount();
-
-            if (!$affected) {
-                throw new Exception('Failed to add email', 500);
-            }
-
-            if (empty($user)) {
-                $user = Users::find($user_id);
-
-                if (empty($user)) {
-                    throw new Exception('Invalid user', 400);
-                }
-            }
-
-            $orm->commit();
-        } catch (Exception $e) {
-            $orm->rollback();
-            throw new Exception('Failed to add email', 500);
-        }
-
-        $verify_id = $this->code([
-            'user_id' => $user_id,
-            'email' => $email,
-            'type' => self::NEW_EMAIL,
-            'user' => $user['user'],
-            'name' => trim(@$user['fname'] . ' ' . @$user['lname']) ?? "User",
+        UserInfo::removeFor($email->user_id, [
+            'pending_email' => $email->email,
         ]);
 
-        if (empty($verify_id)) {
-            throw new Exception('Email added but failed to send verification code', 500);
+        if (UserInfo::insertFor($email->user_id, ['email' => $email->email])) {
+            return \SkiddPH\Controller\Auth::createSignIn($email->user_id);
         }
 
-        return $verify_id;
-    }
-
-    public function removeEmail($user, $email)
-    {
-        if (empty($user)) {
-            throw new Exception('Invalid user', 400);
-        }
-
-        $orm = Auth::db();
-
-        if (is_array($user)) {
-            $user_id = $user['id'];
-        } else {
-            $user_id = $user;
-            $user = null;
-        }
-
-        try {
-            $orm->begin();
-            $affected = $orm->table(InfoModel::TB)
-                ->where(['user_id' => $user_id])
-                ->and()
-                ->where(['value' => $orm->quote(Helper::jsonEncode($email))])
-                ->and()
-                ->where(['name' => ['IN' => [$orm->quote('email'), $orm->quote('pending_email')]]])
-                ->delete()
-                ->rowCount();
-
-            if (!$affected) {
-                throw new Exception('Failed to remove email', 500);
-            }
-
-            $orm->commit();
-        } catch (Exception $e) {
-            $orm->rollback();
-            throw new Exception('Failed to remove email' . $e->getMessage() . '>>:' . $orm->getLastQuery(), 500);
-        }
-
-        return true;
+        throw new Exception('Failed to verify email', 500);
     }
 }

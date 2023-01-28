@@ -5,14 +5,13 @@ namespace SkiddPH\Plugin\Auth;
 use Exception;
 use Error;
 use SkiddPH\Helper\Arr;
-use SkiddPH\Core\Plugin\DB as PluginDB;
 use SkiddPH\Plugin\Database\ORM;
 use SkiddPH\Plugin\Database\Database;
 use SkiddPH\Plugin\Auth\Model\Users as UsersModel;
 use SkiddPH\Plugin\Auth\Model\Roles as RolesModel;
 use SkiddPH\Plugin\Auth\Model\Info as InfoModel;
 
-class Auth implements PluginDB
+class Auth
 {
     final static function db(): ORM
     {

@@ -117,6 +117,8 @@ class Request
                 $body[$key] = (object) $body[$key];
             } else if ($opts['type'] === 'json') {
                 $body[$key] = json_decode($body[$key], true);
+            } else if ($opts['type'] === 'enum') {
+                $body[$key] = is_numeric($body[$key]) ? (int) $body[$key] : (string) $body[$key];
             }
 
             if ($opts['type'] === 'string' && isset($opts['min']) && strlen($body[$key]) < $opts['min']) {
@@ -149,6 +151,14 @@ class Request
 
             if ($opts['type'] === 'array' && isset($opts['max']) && count($body[$key]) > $opts['max']) {
                 throw new Exception("Field $alias must have at most {$opts['max']} items", 400);
+            }
+
+            if ($opts['type'] === 'enum' && isset($opts['values']) && (!is_array(@$opts['values']) || empty($opts['values']))) {
+                throw new Exception("Field $alias must have a non-empty array of values", 400);
+            }
+
+            if ($opts['type'] === 'enum' && isset($opts['values']) && !in_array($body[$key], (array) $opts['values'])) {
+                throw new Exception("Field $alias must be one of: " . implode(', ', $opts['values']), 400);
             }
         }
 

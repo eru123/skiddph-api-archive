@@ -16,10 +16,11 @@ class Row
      * @param array<string> $fields
      * @param array<string, mixed> $data
      */
-    final public function __construct($model, $data)
+    final public function __construct(Model $model, array $data = [], array $update = [])
     {
         $this->model = $model;
         $this->data = $data;
+        $this->update = $update;
     }
 
     /**
@@ -41,11 +42,23 @@ class Row
      */
     final public function __get($name)
     {
-        if (in_array($name, $this->fields)) {
-            return $this->update[$name] ?? $this->data[$name];
+        if (in_array($name, $this->model->fields())) {
+            return $this->update[$name] ?? ($this->data[$name] ?? null);
         }
 
         throw new Exception("Field not found: $name");
+    }
+
+    final public function __call($name, $arguments)
+    {
+        if (method_exists($this, $name)) {
+            return call_user_func_array([$this, $name], $arguments);
+        } else if (method_exists($this->model, $name)) {
+            $arguments[] = $this;
+            return call_user_func_array([$this->model, $name], $arguments);
+        }
+
+        throw new Exception("Method not found: $name");
     }
 
     final protected function use_where(&$model)
@@ -81,7 +94,6 @@ class Row
 
         return $data;
     }
-
     final protected function to_insert_data()
     {
         $fields = $this->model->fields();
@@ -91,15 +103,17 @@ class Row
         $allowed = array_fill_keys($allowed, true);
 
         $data = array_merge($this->data, $this->update);
+        $cast = $this->model->cast($this->model->get_prefix_set_cast(), $data);
+        $insert = $this->model->cast($this->model->get_prefix_insert_cast(), array_fill_keys($fields, null));
+
         foreach ($data as $k => $v) {
             if (!isset($allowed[$k])) {
                 unset($data[$k]);
             }
         }
 
-        return $data;
+        return array_merge($data, $cast, $insert);
     }
-
     final protected function set_primary_key($value)
     {
         $primary_key = $this->model->primaryKey();
@@ -117,8 +131,12 @@ class Row
     final public function update($data = [])
     {
         $model = $this->model->new();
+        $fields = $this->model->fields();
+        $fields_data = array_fill_keys($fields, null);
         $this->use_where($model);
-        if (empty($this->update) || !$model->update(array_merge($this->update, $data))) {
+        $update = $this->model->cast($this->model->get_prefix_update_cast(), $fields_data);
+        $data = array_merge($update, $this->update, $data);
+        if (empty($this->update) || !$model->update($data)) {
             return false;
         }
         $this->data = array_merge($this->data, $this->update);
@@ -172,16 +190,16 @@ class Row
         if (empty($data)) {
             return false;
         }
+        
+        $insert = $this->model->new()->data($data)->insert();
 
-        $insert = $this->model->new()->insert($data);
         $this->set_primary_key($insert);
         if (!$insert) {
             return false;
         }
-
+        
         $model = $this->model->new();
         $this->use_where($model);
-
         $this->data = $model->first()->array();
         $this->update = [];
         return $this;

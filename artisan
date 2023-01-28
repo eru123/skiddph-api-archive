@@ -128,4 +128,11 @@ function __serve()
     passthru($cmd);
 }
 
+function __init()
+{
+    if (!file_exists(__DIR__ . '/.env')) {
+        copy(__DIR__ . '/.env.example', __DIR__ . '/.env');
+    }
+}
+
 (function_exists('__' . $cmd) ? '__' . $cmd : '__phinx')();

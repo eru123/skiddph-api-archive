@@ -16,6 +16,8 @@ final class PluginFileUploader extends AbstractMigration
             ->addColumn('size', 'integer', ['null' => false])
             ->addColumn('hash', 'string', ['null' => false])
             ->addColumn('connector', 'string', ['null' => false])
+            ->addColumn('privacy', 'enum', ['values' => ['public', 'private', 'protected'], 'null' => false, 'default' => 'private'])
+            ->addColumn('password', 'string', ['null' => true])
             ->addColumn('date', 'timestamp', ['null' => false, 'default' => 'CURRENT_TIMESTAMP'])
             ->create();
     }

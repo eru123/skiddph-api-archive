@@ -86,7 +86,7 @@ class Router
         foreach ($routes as $k => $route) {
             $route['path'] = $this->base . '/' . trim($route['path'], '/');
             $rgx = preg_replace('/\//', "\\\/", $route['path']);
-            $rgx = preg_replace('/\{([a-zA-Z0-9]+)\}/', '(?P<$1>[a-zA-Z0-9]+)', $rgx);
+            $rgx = preg_replace('/\{([a-zA-Z0-9]+)\}/', '(?P<$1>.*)', $rgx);
             $rgx = '/^' . $rgx . '$/';
             $route['needle'] = $rgx;
             $routes[$k] = $route;

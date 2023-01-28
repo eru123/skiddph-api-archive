@@ -12,6 +12,9 @@ abstract class Model
     protected $query = [];
     protected $last_query = null;
     protected $last_call = null;
+    protected $set_cast = 'set__';
+    protected $insert_cast = 'insert__';
+    protected $update_cast = 'update__';
     /**
      * PDO variable can be a string for DB::connect(), a PDO Argument array, or a PDO instance.
      * @var string|array|PDO
@@ -26,7 +29,7 @@ abstract class Model
     final public static function __callStatic($name, $arguments)
     {
         $fun = "f__$name";
-        $obj = new static();
+        $obj = new static ();
         if (method_exists($obj, $fun)) {
             return call_user_func_array([$obj, $fun], $arguments);
         }
@@ -60,7 +63,7 @@ abstract class Model
 
         if (is_array($this->pdo)) {
             $this->pdo = new PDO(...$this
-                ->pdo);
+                    ->pdo);
             return $this->pdo;
         }
 
@@ -86,6 +89,30 @@ abstract class Model
     {
         $this->f__fields();
         return static::$primary_key;
+    }
+    /**
+     * Get prefix for set casting, Applicable for update and insert
+     * @return string
+     */
+    final protected function f__get_prefix_set_cast()
+    {
+        return $this->set_cast;
+    }
+    /**
+     * Get prefix for insert casting, Applicable for insert
+     * @return string
+     */
+    final protected function f__get_prefix_insert_cast()
+    {
+        return $this->insert_cast;
+    }
+    /**
+     * Get prefix for update casting, Applicable for update
+     * @return string
+     */
+    final protected function f__get_prefix_update_cast()
+    {
+        return $this->update_cast;
     }
     /**
      * Summary of Wwhere
@@ -393,7 +420,6 @@ abstract class Model
         $limit = $this->f__get_limit();
         $order = $this->f__get_order();
         $sql = "$select $from $where $order $limit";
-        echo $sql, PHP_EOL;
         return $sql;
     }
     final protected function f__get(...$where)
@@ -404,8 +430,12 @@ abstract class Model
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-        return new Rows($this, $stmt->fetchAll(PDO::FETCH_ASSOC));
+        return new Rows($this, $stmt->fetchAll(PDO::FETCH_ASSOC) ?? []);
     }
+    final protected function f__all()
+    {
+        return $this->f__new()->f__get();
+    }    
     final protected function f__first(...$where)
     {
         $this->last_call = 'first';
@@ -418,21 +448,23 @@ abstract class Model
         return $result ? new Row($this, $result) : null;
     }
     final protected function f__find(...$where)
-    {
+    {   
+        $this->f__fields();
+
         if (empty($where)) {
             throw new Exception('Please provide id to find or a where arguments');
-        }
-
-        if (empty($this->primary_key)) {
-            throw new Exception('Primary key not set');
         }
 
         if (empty($this->table)) {
             throw new Exception('Table not set');
         }
 
-        if (count($where) === 1 && is_numeric($where[0])) {
-            $where = [$this->primary_key, $where[0]];
+        if (empty(static::$primary_key) && count($where) === 1) {
+            throw new Exception('Table has no primary key');
+        }
+
+        if (count($where) === 1) {
+            $where = [static::$primary_key, $where[0]];
         }
 
         $this->f__where(...$where);
@@ -442,7 +474,8 @@ abstract class Model
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? new Row($this, $result): null;
     }
     final protected function f__insertSql($data = null)
     {
@@ -501,7 +534,6 @@ abstract class Model
         $this->last_call = 'insert';
         $rows = count((array) $this->query['data']);
         $query = $this->f__insertSql($data);
-        echo $query, PHP_EOL;
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
@@ -553,7 +585,6 @@ abstract class Model
         $this->last_call = 'update';
         $query = $this->f__updateSql($data);
         $this->last_query = $query;
-        echo $query, PHP_EOL;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
@@ -578,7 +609,6 @@ abstract class Model
         $this->last_call = 'delete';
         $query = $this->f__deleteSql(...$where);
         $this->last_query = $query;
-        echo $query, PHP_EOL;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
         $stmt->execute();
@@ -655,9 +685,9 @@ abstract class Model
         $this->last_query = null;
         return $this;
     }
-    final protected function f__create()
+    final protected function f__create($data = [])
     {
-        return new Row($this, []);
+        return new Row($this, [], $data);
     }
     final protected function f__begin()
     {
@@ -673,5 +703,17 @@ abstract class Model
     {
         $this->f__pdo()->rollBack();
         return $this;
+    }
+
+    final protected function f__cast($prefix, $data)
+    {
+        $casted = [];
+        foreach ($data as $key => $value) {
+            if (method_exists($this, $prefix . $key)) {
+                $casted[$key] = $this->{$prefix . $key}($value, $data);
+                continue;
+            }
+        }
+        return $casted;
     }
 }
