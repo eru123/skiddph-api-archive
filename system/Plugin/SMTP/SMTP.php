@@ -7,7 +7,7 @@ use PHPMailer\PHPMailer\PHPMailer;
 
 class SMTP
 {
-    private $smtp_opts = null;
+    private $smtp_opts = [];
     private $to = [];
     private $cc = [];
     private $bcc = [];
@@ -51,137 +51,105 @@ class SMTP
         if (empty($this->smtp_opts['from_name'])) {
             throw new Exception('Invalid SMTP from name', 400);
         }
-
-        if (empty($this->smtp_opts['secure'])) {
-            $this->smtp_opts['secure'] = 'tls';
-        }
-
-        if (empty($this->smtp_opts['auth'])) {
-            $this->smtp_opts['auth'] = true;
-        }
-
-        if (empty($this->smtp_opts['debug'])) {
-            $this->smtp_opts['debug'] = 0;
-        }
-
-        if (empty($this->smtp_opts['charset'])) {
-            $this->smtp_opts['charset'] = 'utf-8';
-        }
-
-        if (empty($this->smtp_opts['encoding'])) {
-            $this->smtp_opts['encoding'] = '8bit';
-        }
-
-        if (empty($this->smtp_opts['priority'])) {
-            $this->smtp_opts['priority'] = 3;
-        }
-
-        if (empty($this->smtp_opts['wordwrap'])) {
-            $this->smtp_opts['wordwrap'] = 0;
-        }
-
-        if (empty($this->smtp_opts['timeout'])) {
-            $this->smtp_opts['timeout'] = 30;
-        }
-
-        if (empty($this->smtp_opts['keepalive'])) {
-            $this->smtp_opts['keepalive'] = false;
-        }
     }
 
-    public function to($email): self
+    private static function validateEmail($email): bool
     {
-        if (is_array($email)) {
-            $this->to = array_merge($this->to, $email);
-        } else if (is_string($email)) {
-            $this->to = array_merge($this->to, preg_split('/[,;]+/', $email));
-        }
+        return filter_var($email, FILTER_VALIDATE_EMAIL);
+    }
 
+    public function __set($name, $value)
+    {
+        if (in_array($name, ['to', 'cc', 'bcc'])) {
+            $this->{$name} = array_merge($this->{$name}, $this->extractEmail($value));
+            $this->{$name} = array_unique($this->{$name});
+            $this->{$name} = array_map('trim', $this->{$name});
+            $this->{$name} = array_filter($this->{$name}, 'static::validateEmail');
+            return;
+        }
+        $this->smtp_opts[$name] = $value;
+    }
+
+    public function __get($name)
+    {
+        if (in_array($name, ['to', 'cc', 'bcc'])) {
+            return $this->{$name};
+        }
+        return $this->smtp_opts[$name] ?? null;
+    }
+
+    public function __call($name, $arguments)
+    {
+        if (in_array($name, ['to', 'cc', 'bcc'])) {
+            $this->{$name} = array_merge($this->{$name}, $this->extractEmail($arguments[0]));
+            $this->{$name} = array_unique($this->{$name});
+            $this->{$name} = array_map('trim', $this->{$name});
+            $this->{$name} = array_filter($this->{$name}, 'static::validateEmail');
+            return $this;
+        }
+        $this->smtp_opts[$name] = @$arguments[0];
         return $this;
     }
 
-    public function cc($email): self
+    public static function __callStatic($name, $arguments)
     {
-        if (is_array($email)) {
-            $this->cc = array_merge($this->cc, $email);
-        } else if (is_string($email)) {
-            $this->cc = array_merge($this->cc, preg_split('/[,;]+/', $email));
+        $smtp = static::use ();
+        return $smtp->__call($name, $arguments);
+    }
+
+    public function __toString()
+    {
+        return json_encode($this->smtp_opts);
+    }
+
+    private static function extractEmail($emails): array
+    {
+        if (is_string($emails)) {
+            $emails = preg_split('/[,;]+/', $emails);
         }
 
-        return $this;
-    }
-
-    public function bcc($email): self
-    {
-        if (is_array($email)) {
-            $this->bcc = array_merge($this->bcc, $email);
-        } else if (is_string($email)) {
-            $this->bcc = array_merge($this->bcc, preg_split('/[,;]+/', $email));
-        }
-
-        return $this;
-    }
-
-    public function text(string $text): self
-    {
-        $this->smtp_opts['text'] = $text;
-        return $this;
-    }
-
-    public function subject(string $subject): self
-    {
-        $this->smtp_opts['subject'] = $subject;
-        return $this;
-    }
-
-    public function html(bool $html = true): self
-    {
-        $this->smtp_opts['html'] = $html;
-        return $this;
+        return $emails;
     }
 
     public function send(): bool
     {
+        $opt = $this->smtp_opts;
         $mail = new PHPMailer(true);
-
         $mail->isSMTP();
-        $mail->SMTPDebug = $this->smtp_opts['debug'];
-        $mail->Host = $this->smtp_opts['host'];
-        $mail->Port = $this->smtp_opts['port'];
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_SMTPS;
-        $mail->SMTPAuth = true;
-        $mail->Username = $this->smtp_opts['user'];
-        $mail->Password = $this->smtp_opts['pass'];
-        $mail->SMTPOptions = [
-            'ssl' => [
-                'verify_peer' => false,
-                'verify_peer_name' => false,
-                'allow_self_signed' => true
-            ]
-        ];
 
-        $mail->setFrom($this->smtp_opts['from'], $this->smtp_opts['from_name']);
-        $mail->addReplyTo($this->smtp_opts['reply_to'], $this->smtp_opts['reply_to_name']);
+        $mail->SMTPDebug = isset($opt['debug']) ? $opt['debug'] : 0;
 
-        foreach ($this->to as $email) {
-            $mail->addAddress($email);
+        $mail->Host     = $opt['host'];
+        $mail->Port     = $opt['port'];
+        $mail->Username = $opt['user'];
+        $mail->Password = $opt['pass'];
+
+        if (isset($opt['secure']))      $mail->SMTPSecure       = $opt['secure'];
+        if (isset($opt['auth']))        $mail->SMTPAuth         = $opt['auth'];
+        if (isset($opt['options']))     $mail->SMTPOptions      = $opt['options'];
+        if (isset($opt['charset']))     $mail->CharSet          = $opt['charset'];
+        if (isset($opt['encoding']))    $mail->Encoding         = $opt['encoding'];
+        if (isset($opt['priority']))    $mail->Priority         = $opt['priority'];
+        if (isset($opt['wordwrap']))    $mail->WordWrap         = $opt['wordwrap'];
+        if (isset($opt['timeout']))     $mail->Timeout          = $opt['timeout'];
+        if (isset($opt['keepalive']))   $mail->SMTPKeepAlive    = $opt['keepalive'];
+        if (isset($opt['text']))        $mail->AltBody          = $opt['text'];
+        if (isset($opt['subject']))     $mail->Subject          = $opt['subject'];
+
+        if (isset($opt['html'])) {
+            $mail->Body = $opt['html'];
+            $mail->isHTML(true);
+        } else if (isset($opt['text'])) {
+            $mail->Body = nl2br($opt['text']);
+            $mail->isHTML(true);
         }
 
-        foreach ($this->cc as $email) {
-            $mail->addCC($email);
-        }
+        if (isset($opt['from']))        $mail->setFrom($opt['from'], $opt['from_name']);
+        if (isset($opt['reply_to']))    $mail->addReplyTo($opt['reply_to'], $opt['reply_to_name']);
 
-        foreach ($this->bcc as $email) {
-            $mail->addBCC($email);
-        }
-
-        $mail->Subject = $this->smtp_opts['subject'];
-
-        $is_html = (bool) @$this->smtp_opts['html'];
-
-        $mail->Body = $is_html && !empty($this->smtp_opts['html']) ? $this->smtp_opts['html'] : nl2br($this->smtp_opts['text']);
-        $mail->AltBody = $this->smtp_opts['text'];
-        $mail->isHTML($is_html);
+        foreach ($this->to as $email)   $mail->addAddress($email);
+        foreach ($this->cc as $email)   $mail->addCC($email);
+        foreach ($this->bcc as $email)  $mail->addBCC($email);
 
         return $mail->send();
     }
