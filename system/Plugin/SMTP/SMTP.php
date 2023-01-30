@@ -144,8 +144,8 @@ class SMTP
             $mail->isHTML(true);
         }
 
-        if (isset($opt['from']))        $mail->setFrom($opt['from'], $opt['from_name']);
-        if (isset($opt['reply_to']))    $mail->addReplyTo($opt['reply_to'], $opt['reply_to_name']);
+        if (isset($opt['from']) && isset($opt['from_name']))            $mail->setFrom($opt['from'], $opt['from_name']);
+        if (isset($opt['reply_to']) && isset($opt['reply_to_name']))    $mail->addReplyTo($opt['reply_to'], $opt['reply_to_name']);
 
         foreach ($this->to as $email)   $mail->addAddress($email);
         foreach ($this->cc as $email)   $mail->addCC($email);
