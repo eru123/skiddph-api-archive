@@ -181,7 +181,9 @@ class Auth
             UserInfo::insertFor($user->id, $info);
 
             $roles = $user->id === 1 ? ['SUPERADMIN'] : [];
-            UserRole::insertFor($user->id, $roles);
+            if (!empty($roles)) {
+                UserRole::insertFor($user->id, $roles);
+            }
 
             $res = static::signin([
                 'user' => $user->user,
@@ -205,7 +207,7 @@ class Auth
             if ($cde === 0) {
                 $msg = 'Failed to create user';
             }
-            throw new Exception($msg, $e->getCode());
+            throw new Exception($msg, $e->getCode(), $e);
         }
     }
     static function emailSend($data = [])
@@ -219,7 +221,6 @@ class Auth
 
         $user = isset($data['user']) ? $data : User::find($user_id);
         $info = (isset($data['fname']) && isset($data['lname']) || isset($data['name'])) ? $data : UserInfo::from($user_id);
-
         $body = empty($data) ? Request::bodySchema([
             'email' => [
                 'alias' => 'Email',
@@ -234,6 +235,7 @@ class Auth
                 'default' => 'new',
             ],
         ]) : $data;
+
 
         $verify_id = Email::send([
             'user_id' => isset($user['id']) ? $user['id'] : $user['user_id'],
