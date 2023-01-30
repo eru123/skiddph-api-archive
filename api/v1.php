@@ -13,7 +13,7 @@ $auth->post('/signup', [AuthController::class, 'signup']);
 // $auth->post('/verify/resend/email', [Auth::class, 'resendEmail']);
 $auth->post('/email/send', [AuthController::class, 'emailSend']);
 $auth->post('/email/verify', [AuthController::class, 'emailVerify']);
-$auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify']);
+// $auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify']);
 // $auth->post('/verify/email/{verifyId}', [Auth::class, 'verifyEmail']);
 // $auth->post('/user/add/email', [Auth::class, 'addEmail']);
 // $auth->post('/user/remove/email', [Auth::class, 'removeEmail']);

@@ -19,9 +19,8 @@ $cmd = array_shift($data);
 function __phinx()
 {
     global $data, $phinx, $cmd;
-    $cmd = substr($cmd, 2);
     $args = implode(' ', $data);
-    $cmd = "php $phinx $args";
+    $cmd = "php $phinx $cmd $args";
     passthru($cmd);
 }
 

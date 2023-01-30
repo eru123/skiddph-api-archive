@@ -2,6 +2,7 @@
 
 namespace SkiddPH\Model;
 
+use SkiddPH\Helper\Date;
 use SkiddPH\Plugin\DB\Model;
 use SkiddPH\Plugin\DB\DB;
 use SkiddPH\Plugin\DB\Row;
@@ -11,7 +12,7 @@ class UserInfo extends Model
 {
     protected $table = 'auth_users_info';
 
-    protected function f__getUserIdBy(string $by, string $email): Row|null
+    protected function f__findBy(string $by, string $email): Row|null
     {
         return $this->new()
             ->select('user_id')
@@ -20,71 +21,44 @@ class UserInfo extends Model
             ->first();
     }
 
-    protected function f__insertFor(int $user_id, $data): void
+    protected function f__upsertFor(int $user_id, array $data)
     {   
-        $new_data = [];
-        foreach ($data as $name => $value) {
-            $new_data[] = [
+        if(empty($data)) {
+            return;
+        }
+
+        $insert = [];
+        foreach ($data as $key => $value) {
+            $insert[] = [
                 'user_id' => $user_id,
-                'name' => $name,
+                'name' => $key,
                 'value' => json_encode($value),
+                'created_at' => Date::parse('now', 'datetime'),
+                'updated_at' => Date::parse('now', 'datetime')
             ];
         }
 
         $this->new()
-            ->data($new_data)
-            ->insert();
+            ->data($insert)
+            ->upsert();
     }
 
-    protected function f__from(int $user_id): array
-    {
-        $user = $this->new()
-            ->where('user_id', $user_id)
-            ->get()
-            ->array();
-
-        $data = [];
-        foreach ($user as $row) {
-            $name = $row['name'];
-            $value = json_decode($row['value'], true);
-            if (!isset($data[$name])) {
-                $data[$name] = [];
-            }
-
-            $data[$name][] = $value;
+    protected function f__deleteFor(int $user_id, array $data)
+    {   
+        if (empty($data)) {
+            return;
         }
-
-        foreach ($data as $name => $value) {
-            if (count($value) == 1) {
-                $data[$name] = $value[0];
-            }
-        }
-
-        return $data;
-    }
-
-    protected function f__isValueExists(string $name, string $value): bool
-    {
-        return $this->new()
-            ->where('name', $name)
-            ->where('value', json_encode($value))
-            ->count() > 0;
-    }
-
-    protected function f__removeFor(int $user_id, $data)
-    {
-        $del = $this->new()
-            ->where('user_id', $user_id);
-
-        foreach ($data as $name => $value) {
-            $del->where('name', $name);
-            if (is_array($value)) {
-                $del->where('value', 'in', array_map(fn($v) => json_encode($v), $value));
+        
+        $model = $this->new();
+        $model->where('user_id', $user_id);
+        foreach ($data as $i => $value) {
+            if ($i === 0) {
+                $model->where('name', $value);
             } else {
-                $del->where('value', json_encode($value));
+                $model->orWhere('name', $value);
             }
         }
 
-        return $del->delete();
+        $model->delete();
     }
 }

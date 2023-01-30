@@ -10,7 +10,7 @@ final class AuthEmailVerification extends AbstractMigration
     {
         $table = $this->table('auth_email_verification');
         $table->addColumn('user_id', 'integer', ['null' => false])
-            ->addColumn('updated_at', 'datetime', ['null' => false])
+            ->addColumn('created_at', 'datetime', ['null' => false])
             ->addColumn('code', 'string', ['null' => false])
             ->addColumn('email', 'string', ['null' => false])
             ->addColumn('type', 'string', ['null' => false])

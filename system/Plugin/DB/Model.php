@@ -45,6 +45,7 @@ abstract class Model
 
         throw new Exception("Method not found: $name");
     }
+
     /**
      * Get PDO instance
      * @throws Exception
@@ -435,7 +436,7 @@ abstract class Model
     final protected function f__all()
     {
         return $this->f__new()->f__get();
-    }    
+    }
     final protected function f__first(...$where)
     {
         $this->last_call = 'first';
@@ -448,7 +449,7 @@ abstract class Model
         return $result ? new Row($this, $result) : null;
     }
     final protected function f__find(...$where)
-    {   
+    {
         $this->f__fields();
 
         if (empty($where)) {
@@ -475,7 +476,7 @@ abstract class Model
         $stmt = $pdo->prepare($query);
         $stmt->execute();
         $result = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $result ? new Row($this, $result): null;
+        return $result ? new Row($this, $result) : null;
     }
     final protected function f__insertSql($data = null)
     {
@@ -496,7 +497,7 @@ abstract class Model
         if (!empty($this->fillable)) {
             $fillable = $this->fillable;
         } else {
-            foreach ($data as $key => $value) {
+            foreach ($data as $value) {
                 $keys = array_keys((array) $value);
                 $fillable = array_merge($fillable, $keys);
             }
@@ -530,7 +531,7 @@ abstract class Model
         return $query . implode(', ', $rows);
     }
     final protected function f__insert($data = null)
-    {   
+    {
         $this->last_call = 'insert';
         $rows = count((array) $this->query['data']);
         $query = $this->f__insertSql($data);
@@ -617,6 +618,74 @@ abstract class Model
         $stmt->execute();
         return $stmt->rowCount();
     }
+    final protected function f__upsertSql(...$data)
+    {
+        if (!empty($data)) {
+            $this->f__data($data);
+        }
+
+        if (empty($this->query['data']) || !is_array($this->query['data'])) {
+            throw new Exception('No data to insert');
+        }
+
+        if (empty($this->table)) {
+            throw new Exception('Table not set');
+        }
+
+        $fillable = [];
+        $data = (array) $this->query['data'];
+        if (!empty($this->fillable)) {
+            $fillable = $this->fillable;
+        } else {
+            foreach ($data as $value) {
+                $keys = array_keys((array) $value);
+                $fillable = array_merge($fillable, $keys);
+            }
+        }
+        $fillable = array_unique($fillable, SORT_REGULAR);
+        $columns = array_map(function ($value) {
+            return "`$value`";
+        }, $fillable);
+        $update_columns = array_map(function ($value) {
+            return "`$value` = VALUES(`$value`)";
+        }, $fillable);
+
+        $into = $this->f__get_into();
+        $query = "INSERT $into (" . implode(', ', $columns) . ") VALUES ";
+        $update_query = " ON DUPLICATE KEY UPDATE " . implode(', ', $update_columns);
+        $rows = [];
+        foreach ($data as $row) {
+            $values = [];
+            foreach ($fillable as $column) {
+                if (isset($row[$column]) && $row[$column] instanceof Raw) {
+                    $values[] = $row[$column];
+                    continue;
+                }
+
+                if (!isset($row[$column]) || is_null($row[$column])) {
+                    $values[] = 'NULL';
+                    continue;
+                }
+
+                $values[] = DB::raw('?', [$row[$column]]);
+            }
+            $rows[] = '(' . implode(', ', $values) . ')';
+        }
+
+
+
+        return $query . implode(', ', $rows) . $update_query;
+    }
+    final protected function f__upsert(...$data)
+    {
+        $this->last_call = 'upsert';
+        $query = $this->f__upsertSql(...$data);
+        $this->last_query = $query;
+        $pdo = $this->f__pdo();
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+        return $stmt->rowCount();
+    }
     final protected function f__countSql()
     {
         if (empty($this->table)) {
@@ -692,19 +761,37 @@ abstract class Model
     {
         return new Row($this, [], $data);
     }
-    final protected function f__begin()
+    final protected function f__hasGlobalTransaction()
+    {
+        return cfg('db.global_transaction', false);
+    }
+    final protected function f__hasTransaction()
+    {
+        return cfg('db.has_transaction', false);
+    }
+    final protected function f__begin($global = true)
     {
         $this->f__pdo()->beginTransaction();
+        cfg('db.global_transaction', $global);
+        cfg('db.has_transaction', true);
         return $this;
     }
     final protected function f__commit()
     {
+        if (!cfg('db.has_transaction')) {
+            return $this;
+        }
         $this->f__pdo()->commit();
+        cfg('db.global_transaction', false);
         return $this;
     }
     final protected function f__rollback()
     {
+        if (!cfg('db.has_transaction')) {
+            return $this;
+        }
         $this->f__pdo()->rollBack();
+        cfg('db.global_transaction', false);
         return $this;
     }
 

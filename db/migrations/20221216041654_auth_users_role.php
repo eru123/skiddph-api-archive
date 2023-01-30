@@ -11,6 +11,7 @@ final class AuthUsersRole extends AbstractMigration
         $table = $this->table('auth_users_role');
         $table->addColumn('user_id', 'integer', ['null' => false])
             ->addColumn('role', 'string', ['limit' => 255, 'null' => false])
+            ->addColumn('created_at', 'datetime', ['null' => true])
             ->addIndex(['user_id', 'role'], ['unique' => true])
             ->create();
     }

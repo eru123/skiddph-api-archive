@@ -23,8 +23,8 @@ class Email
 
         $exp = pcfg('email_verification_expire_at', 'now + 24mins');
         $verify = EmailVerification::where('user_id', $data['user_id'])
-            ->where('updated_at', 'lte', Date::parse(pcfg('auth.email_resend_if_time', 'now - 5mins'), 'datetime'))
-            ->where('updated_at', 'gte', Date::parse("now - ($exp)", 'datetime'))
+            ->where('created_at', 'lte', Date::parse(pcfg('auth.email_resend_if_time', 'now - 5mins'), 'datetime'))
+            ->where('created_at', 'gte', Date::parse("now - ($exp)", 'datetime'))
             ->where('type', $data['type'])
             ->first();
 
@@ -32,13 +32,19 @@ class Email
             return $verify->id;
         }
 
-
-
         try {
             $data['code'] = Rand::int(100000, 999999);
-            $verify_id = EmailVerification::newCode($data);
+            $verify_id = EmailVerification::insert([
+                'user_id' => $data['user_id'],
+                'code' => $data['code'],
+                'email' => $data['email'],
+                'type' => $data['type'],
+                'status' => 0,
+                'created_at' => Date::parse('now', 'datetime')
+            ]);
+
             if (!$verify_id) {
-                throw new Exception('Failed to create verification code', 500);
+                throw new Exception('Failed to insert verification code', 500);
             }
 
             $data['token'] = JWT::encode([

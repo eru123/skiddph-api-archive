@@ -3,12 +3,12 @@
 namespace SkiddPH\Controller;
 
 use Exception;
-use SkiddPH\Model\EmailVerification;
+use SkiddPH\Helper\Date;
 use SkiddPH\Model\User;
+use SkiddPH\Model\UserEmail;
 use SkiddPH\Model\UserInfo;
 use SkiddPH\Model\UserRole;
 use SkiddPH\Plugin\Auth\Email;
-use SkiddPH\Plugin\DB\DB;
 use SkiddPH\Core\HTTP\Request;
 use SkiddPH\Plugin\Auth\JWT;
 use SkiddPH\Plugin\Auth\Auth as Plugin;
@@ -39,13 +39,20 @@ class Auth
             ],
         ]) : $data;
 
-        $user = User::find('user', $body['user']) ?: User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0);
+        if (!($user = User::find('user', $body['user']))) {
+            $email = UserEmail::where('email', $body['user'])
+                ->where('deleted_at', null)
+                ->where('verified', true)
+                ->first();
 
-        if (!$user) {
-            if (User::find(UserInfo::getUserIdBy('email', $body['user']) ?? 0)) {
-                throw new Exception('Email must be verified to use in login', 401);
+            if (!$email) {
+                throw new Exception('User not found', 404);
             }
 
+            $user = User::find($email->user_id);
+        }
+
+        if (!$user) {
             throw new Exception('User not found', 404);
         }
 
@@ -53,11 +60,8 @@ class Auth
             throw new Exception('Password is incorrect', 401);
         }
 
-        $info = UserInfo::from($user->id);
-        $roles = UserRole::from($user->id);
-
-        $data = array_merge($user->array(), $info, ['roles' => $roles]);
-        $jwt_fields = ['id', 'user', 'roles', 'email'];
+        $data = User::details($user->id);
+        $jwt_fields = ['id', 'user', 'roles', 'emails'];
 
         $payload = array_filter($data, function ($key) use ($jwt_fields) {
             return in_array($key, $jwt_fields);
@@ -83,11 +87,8 @@ class Auth
             throw new Exception('User not found', 404);
         }
 
-        $info = UserInfo::from($user->id);
-        $roles = UserRole::from($user->id);
-
-        $data = array_merge($user->array(), $info, ['roles' => $roles]);
-        $jwt_fields = ['id', 'user', 'roles', 'email'];
+        $data = User::details($user->id);
+        $jwt_fields = ['id', 'user', 'roles', 'emails'];
 
         $payload = array_filter($data, function ($key) use ($jwt_fields) {
             return in_array($key, $jwt_fields);
@@ -149,7 +150,7 @@ class Auth
             throw new Exception('Signup is disabled', 403);
         }
 
-        if (UserInfo::getUserIdBy('email', $body['email'])) {
+        if (UserEmail::inUse($body['email'])) {
             throw new Exception('Email already exists', 409);
         }
 
@@ -161,10 +162,19 @@ class Auth
         if (User::find('user', $body['user'])) {
             throw new Exception('Username already exists', 409);
         }
+
         User::begin();
+
         try {
             $user = User::create($body)->save();
             if (pcfg('auth.email_must_verified') && !empty($body['pending_email'])) {
+                UserEmail::insert([
+                    'user_id' => $user->id,
+                    'email' => $body['pending_email'],
+                    'verified' => false,
+                    'created_at' => Date::parse('now', 'datetime'),
+                    'updated_at' => Date::parse('now', 'datetime'),
+                ]);
                 $verify_id = static::emailSend([
                     'user_id' => $user->id,
                     'email' => $body['pending_email'],
@@ -172,17 +182,28 @@ class Auth
                     'user' => $user->user,
                     'name' => $body['fname'] . ' ' . $body['lname'],
                 ])['verify_id'];
+            } else {
+                UserEmail::insert([
+                    'user_id' => $user->id,
+                    'email' => $body['email'],
+                    'verified' => true,
+                    'created_at' => Date::parse('now', 'datetime'),
+                    'updated_at' => Date::parse('now', 'datetime'),
+                ]);
             }
 
-            $to_info = ['email', 'pending_email', 'fname', 'lname'];
+            $to_info = ['fname', 'lname'];
             $info = array_filter($body, function ($key) use ($to_info) {
                 return in_array($key, $to_info);
             }, ARRAY_FILTER_USE_KEY);
-            UserInfo::insertFor($user->id, $info);
+
+            if (!empty($info)) {
+                UserInfo::upsertFor($user->id, $info);
+            }
 
             $roles = $user->id === 1 ? ['SUPERADMIN'] : [];
             if (!empty($roles)) {
-                UserRole::insertFor($user->id, $roles);
+                UserRole::upsertFor($user->id, $roles);
             }
 
             $res = static::signin([
@@ -218,9 +239,7 @@ class Auth
             Plugin::guard();
             $user_id = Plugin::user()['id'];
         }
-
-        $user = isset($data['user']) ? $data : User::find($user_id);
-        $info = (isset($data['fname']) && isset($data['lname']) || isset($data['name'])) ? $data : UserInfo::from($user_id);
+        
         $body = empty($data) ? Request::bodySchema([
             'email' => [
                 'alias' => 'Email',
@@ -236,13 +255,16 @@ class Auth
             ],
         ]) : $data;
 
+        if (empty($data)) {
+            $data = User::details($user_id);
+        }
 
         $verify_id = Email::send([
-            'user_id' => isset($user['id']) ? $user['id'] : $user['user_id'],
+            'user_id' => $user_id,
             'email' => $body['email'],
             'type' => $body['type'],
-            'user' => $user['user'],
-            'name' => isset($info['name']) ? trim($info['name']) : trim($info['fname'] . ' ' . $info['lname']),
+            'user' => $data['user'],
+            'name' => isset($data['name']) ? trim($data['name']) : trim($data['fname'] . ' ' . $data['lname']),
         ]);
 
         return [
