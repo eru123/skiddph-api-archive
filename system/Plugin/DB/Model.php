@@ -530,10 +530,13 @@ abstract class Model
         return $query . implode(', ', $rows);
     }
     final protected function f__insert($data = null)
-    {
+    {   
         $this->last_call = 'insert';
         $rows = count((array) $this->query['data']);
         $query = $this->f__insertSql($data);
+        if ($rows === 1 && empty($this->query['data'][0])) {
+            return false;
+        }
         $this->last_query = $query;
         $pdo = $this->f__pdo();
         $stmt = $pdo->prepare($query);
