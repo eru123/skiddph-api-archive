@@ -80,7 +80,7 @@ class Auth
             'refresh_token' => $refresh,
         ];
     }
-    static function createSignIn($id)
+    static function createSignIn(int $id)
     {
         $user = User::find($id);
         if (!$user) {
@@ -307,14 +307,31 @@ class Auth
 
         try {
             UserInfo::begin();
-            $res = Email::verify(['user_id' => $user_id, 'id' => $body['verify_id'], 'type' => $body['type'], 'code' => $body['code']]);
+            $verified = Email::verify([
+                'verify_id' => $body['verify_id'],
+                'user_id' => $user_id, 
+                'id' => $body['verify_id'], 
+                'type' => $body['type'],
+                'code' => $body['code']
+            ]);
+
+            $res = null;
+
+            if (!$verified) {
+                throw new Exception('Invalid verification code', 400);
+            }
+
+            if ($body['type'] === 'new') {
+                $res = static::createSignIn($user_id);
+            }
+
             UserInfo::commit();
             return array_merge($res ?? ['success' => true]);
         } catch (Exception $e) {
             UserInfo::rollback();
 
             if ($e->getCode() === 0) {
-                throw new Exception('Failed to verify emailx', 500);
+                throw new Exception('Failed to verify email', 500);
             }
 
             throw new Exception($e->getMessage(), $e->getCode());

@@ -37,7 +37,7 @@ return [
     /**
      * Email verification token expiration
      */
-    'email_verification_expire_at' => 'now + 24mins',
+    'email_verification_expire_at' => '24mins',
     /**
      * Must be verified to use services
      */
@@ -53,5 +53,5 @@ return [
     /**
      * Email resend if time less than or equal to specified time
      */
-    'email_resend_if_time' => 'now - 5mins',
+    'email_resend_if_time' => '5mins',
 ];
