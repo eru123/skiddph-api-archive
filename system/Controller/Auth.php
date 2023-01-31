@@ -3,6 +3,7 @@
 namespace SkiddPH\Controller;
 
 use Exception;
+use SkiddPH\Core\HTTP\Response;
 use SkiddPH\Helper\Date;
 use SkiddPH\Model\User;
 use SkiddPH\Model\UserEmail;
@@ -168,13 +169,6 @@ class Auth
         try {
             $user = User::create($body)->save();
             if (pcfg('auth.email_must_verified') && !empty($body['pending_email'])) {
-                UserEmail::insert([
-                    'user_id' => $user->id,
-                    'email' => $body['pending_email'],
-                    'verified' => false,
-                    'created_at' => Date::parse('now', 'datetime'),
-                    'updated_at' => Date::parse('now', 'datetime'),
-                ]);
                 $verify_id = static::emailSend([
                     'user_id' => $user->id,
                     'email' => $body['pending_email'],
@@ -182,6 +176,14 @@ class Auth
                     'user' => $user->user,
                     'name' => $body['fname'] . ' ' . $body['lname'],
                 ])['verify_id'];
+
+                UserEmail::insert([
+                    'user_id' => $user->id,
+                    'email' => $body['pending_email'],
+                    'verified' => false,
+                    'created_at' => Date::parse('now', 'datetime'),
+                    'updated_at' => Date::parse('now', 'datetime'),
+                ]);
             } else {
                 UserEmail::insert([
                     'user_id' => $user->id,
@@ -239,7 +241,7 @@ class Auth
             Plugin::guard();
             $user_id = Plugin::user()['id'];
         }
-        
+
         $body = empty($data) ? Request::bodySchema([
             'email' => [
                 'alias' => 'Email',
@@ -273,10 +275,13 @@ class Auth
         ];
     }
     static function emailVerify($data = [])
-    {
+    {   
+        $used_token = false;
+
         if (isset($data['emailToken'])) {
             $token = $data['emailToken'];
             $data = JWT::decode($token);
+            $used_token = true;
         }
 
         if (isset($data['user_id'])) {
@@ -285,6 +290,9 @@ class Auth
             Plugin::guard();
             $user_id = Plugin::user()['id'];
         }
+
+        $success_url = pcfg('auth.email_verify_success_url');
+        $fail_url = pcfg('auth.email_verify_fail_url');
 
         $body = empty($data) ? Request::bodySchema([
             'code' => [
@@ -309,8 +317,8 @@ class Auth
             UserInfo::begin();
             $verified = Email::verify([
                 'verify_id' => $body['verify_id'],
-                'user_id' => $user_id, 
-                'id' => $body['verify_id'], 
+                'user_id' => $user_id,
+                'id' => $body['verify_id'],
                 'type' => $body['type'],
                 'code' => $body['code']
             ]);
@@ -326,12 +334,73 @@ class Auth
             }
 
             UserInfo::commit();
+        
+            if ($used_token) {
+                return Response::redirect($success_url);
+            }
+
             return array_merge($res ?? ['success' => true]);
         } catch (Exception $e) {
             UserInfo::rollback();
 
+            if ($used_token) {
+                return Response::redirect($success_url);
+            }
+
             if ($e->getCode() === 0) {
                 throw new Exception('Failed to verify email', 500);
+            }
+
+            throw new Exception($e->getMessage(), $e->getCode());
+        }
+    }
+    static function addEmail()
+    {
+        Plugin::guard();
+        $user_id = Plugin::user()['id'];
+        $body = Request::bodySchema([
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'string',
+                'regex' => '/^[\w.+-]+@[\w]+\.[\w.]+$/',
+                'required' => true,
+            ],
+        ]);
+
+        $email = $body['email'];
+        if (UserEmail::inUse($email)) {
+            throw new Exception('Email already in use', 400);
+        }
+
+        try {
+            UserEmail::begin();
+            $verify_id = static::emailSend([
+                'user_id' => $user_id,
+                'email' => $email,
+                'type' => 'new',
+                'fname' => (string) @Plugin::user()['fname'],
+                'lname' => (string) @Plugin::user()['lname'],
+                'user' => (string) @Plugin::user()['user'],
+            ])['verify_id'];
+
+            UserEmail::insert([
+                'user_id' => $user_id,
+                'email' => $email,
+                'verified' => false,
+                'created_at' => Date::parse('now', 'datetime'),
+                'updated_at' => Date::parse('now', 'datetime'),
+            ]);
+
+            UserEmail::commit();
+            return [
+                'success' => true,
+                'verify_id' => $verify_id,
+            ];
+        } catch (Exception $e) {
+            UserEmail::rollback();
+
+            if ($e->getCode() === 0) {
+                throw new Exception('Failed to add email', 500);
             }
 
             throw new Exception($e->getMessage(), $e->getCode());

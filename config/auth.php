@@ -54,4 +54,12 @@ return [
      * Email resend if time less than or equal to specified time
      */
     'email_resend_if_time' => '5mins',
+    /**
+     * Email Verification Success URL
+     */
+    'email_verify_success_url' => pcfg('app.client').'/email-verify-success',
+    /**
+     * Email Verification Fail URL
+     */
+    'email_verify_fail_url' => pcfg('app.client').'/email-verify-fail'
 ];

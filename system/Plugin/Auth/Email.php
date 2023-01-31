@@ -15,15 +15,19 @@ class Email
 {
     public static function send($data = []): int
     {
-        $required = ['user_id', 'email', 'type', 'name', 'user'];
+        $required = ['user_id', 'email', 'type', 'user'];
+        $tmp = [];
         foreach ($required as $key) {
             if (empty($data[$key])) {
                 throw new Exception('Invalid ' . $key, 400);
             }
+            $tmp[$key] = $data[$key];
         }
 
+        $data = $tmp;
+
         if (method_exists(static::class, 'send__' . $data['type'])) {
-            static::{'send__' . $data['type']}($data['email']);
+            static::{'send__' . $data['type']}($data['email'], $data);
         }
 
         $expm = Date::parse(pcfg('email_verification_expire_at', '24mins'), 'minutes');
@@ -79,7 +83,7 @@ class Email
         }
     }
 
-    public static function send__new($email)
+    public static function send__new($email, $data)
     {
         if (!pcfg('auth.allow_signup', true)) {
             throw new Exception('Sign up is not allowed', 403);
@@ -91,6 +95,10 @@ class Email
 
         if (UserEmail::inUse($email)) {
             throw new Exception('Email already in use', 400);
+        }
+
+        if (UserEmail::inPending($data['user_id'], $email)) {
+            throw new Exception('Email already in pending', 400);
         }
     }
 
