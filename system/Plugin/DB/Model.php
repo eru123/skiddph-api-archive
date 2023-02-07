@@ -692,8 +692,8 @@ abstract class Model
             throw new Exception('Table not set');
         }
 
-        $query = $this->f__selectSql();
-        return "SELECT COUNT(*) AS `count` FROM ($query)`";
+        $query = $this->f__getSql();
+        return "SELECT COUNT(*) AS `count` FROM ($query) AS f__count_sql";
     }
     final protected function f__count()
     {

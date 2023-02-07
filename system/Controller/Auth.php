@@ -13,6 +13,7 @@ use SkiddPH\Plugin\Auth\Email;
 use SkiddPH\Core\HTTP\Request;
 use SkiddPH\Plugin\Auth\JWT;
 use SkiddPH\Plugin\Auth\Auth as Plugin;
+use SkiddPH\Plugin\Auth\Password;
 
 class Auth
 {
@@ -122,7 +123,7 @@ class Auth
             'pass' => [
                 'alias' => 'Password',
                 'type' => 'string',
-                'min' => 8,
+                'min' => 5,
                 'required' => true,
             ],
             'email' => [
@@ -482,12 +483,12 @@ class Auth
         return User::details($user_id);
     }
 
-    static function changeUsername()
+    static function updateUsername()
     {
         Plugin::guard();
         $user_id = Plugin::user()['id'];
         $current_user = Plugin::user()['user'];
-        
+
         $body = Request::bodySchema([
             'user' => [
                 'alias' => 'Username',
@@ -495,7 +496,7 @@ class Auth
                 'min' => 5,
                 'max' => 32,
                 'regex' => '/^[a-zA-Z0-9_]+$/',
-                'required' => true,
+                'required' => false,
             ],
         ]);
 
@@ -503,7 +504,11 @@ class Auth
             throw new Exception('New username can\'t be the same as the old one', 400);
         }
 
-        if (User::where('user', $body['user'])->where('id', '!=', $user_id)->count() > 0) {
+        $exists_count = User::where('user', $body['user'])
+            ->orWhere('last_user', $body['user'])
+            ->where('id', '!=', $user_id)->count();
+
+        if ($exists_count > 0) {
             throw new Exception('Username already in use', 400);
         }
 
@@ -511,13 +516,69 @@ class Auth
             throw new Exception('Cannot reuse old username', 400);
         }
 
-        $update = User::dataUpdate($user_id, [
-            'user' => $body['user'],
-            'updated_at' => Date::parse('now', 'datetime'),
+        $update = User::where('id', $user_id)
+            ->update([
+                'user' => $body['user'],
+                'updated_at' => Date::parse('now', 'datetime'),
+                'last_user' => $current_user,
+            ]);
+
+        if (!$update) {
+            throw new Exception('Failed to change username', 500);
+        }
+
+        return static::createSignIn($user_id);
+    }
+
+    static function updatePassword()
+    {
+        Plugin::guard();
+        $user_id = Plugin::user()['id'];
+
+        $body = Request::bodySchema([
+            'current_password' => [
+                'alias' => 'Current Password',
+                'type' => 'string',
+                'min' => 5,
+                'required' => true,
+            ],
+            'new_password' => [
+                'alias' => 'New Password',
+                'type' => 'string',
+                'min' => 5,
+                'required' => true,
+            ],
         ]);
 
-        $res = static::createSignIn($user_id);
+        $user = User::where('id', $user_id)->first();
+        
+        if (!$user) {
+            throw new Exception('User not found', 404);
+        }
 
+        if (Password::verify($body['current_password'], $user->hash) === false) {
+            throw new Exception('Incorrect current password');
+        }
 
+        if (Password::verify($body['new_password'], $user->hash) === true) {
+            throw new Exception('New password cannot be the same as the old one', 400);
+        }
+
+        if (Password::verify($body['new_password'], $user->last_hash) === true) {
+            throw new Exception('Cannot reuse old password', 400);
+        }
+
+        $update = User::where('id', $user_id)
+            ->update([
+                'hash' => Password::hash($body['new_password']),
+                'last_hash' => $user->hash,
+                'updated_at' => Date::parse('now', 'datetime'),
+            ]);
+
+        if (!$update) {
+            throw new Exception('Failed to change password', 500);
+        }
+
+        return static::createSignIn($user_id);
     }
 }

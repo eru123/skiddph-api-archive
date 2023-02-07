@@ -18,7 +18,8 @@ class Router
     {
         $default_callback = function ($e) {
             header('Content-Type: application/json');
-            http_response_code($e->getCode());
+            $http_code = is_numeric($e->getCode()) ? $e->getCode() : 500;
+            http_response_code($http_code);
 
             $res = [
                 'code' => $e->getCode(),
@@ -205,8 +206,8 @@ class Router
             exit;
         } catch (Error $e) {
             $fn = $this->error_cb;
+            $e = new Error($e->getMessage(), 500, $e);
             if (is_callable($fn)) {
-                $e->code = 500;
                 $res = call_user_func_array($fn, [$e]);
                 $response($res);
             } else {

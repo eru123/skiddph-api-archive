@@ -16,8 +16,8 @@ $auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify'])
 $auth->post('/email/add', [AuthController::class, 'addEmail']);
 $auth->post('/email/remove', [AuthController::class, 'removeEmail']);
 
-$auth->post('/user/change/user', [Auth::class, 'changeUsername']);
-// $auth->post('/user/change/password', [Auth::class, 'changePassword']);
+$auth->post('/user/update/username', [AuthController::class, 'updateUsername']);
+$auth->post('/user/update/password', [AuthController::class, 'updatePassword']);
 // $auth->post('/user/{userId}/add/role', [Auth::class, 'addRole']);
 // $auth->post('/user/{userId}/remove/role', [Auth::class, 'removeRole']);
 
