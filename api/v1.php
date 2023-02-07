@@ -16,11 +16,12 @@ $auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify'])
 $auth->post('/email/add', [AuthController::class, 'addEmail']);
 $auth->post('/email/remove', [AuthController::class, 'removeEmail']);
 
-// $auth->post('/user/change/user', [Auth::class, 'changeUsername']);
+$auth->post('/user/change/user', [Auth::class, 'changeUsername']);
 // $auth->post('/user/change/password', [Auth::class, 'changePassword']);
 // $auth->post('/user/{userId}/add/role', [Auth::class, 'addRole']);
 // $auth->post('/user/{userId}/remove/role', [Auth::class, 'removeRole']);
 
+// $auth->get('/users', [AuthController::class, 'users']);
 $auth->get('/user', [AuthController::class, 'user']);
 $auth->get('/user/{userId}', [AuthController::class, 'user']);
 
