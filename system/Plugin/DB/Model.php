@@ -692,9 +692,8 @@ abstract class Model
             throw new Exception('Table not set');
         }
 
-        $from = $this->f__get_from();
-        $where = $this->f__get_where();
-        return "SELECT COUNT(*) AS `count` $from $where";
+        $query = $this->f__selectSql();
+        return "SELECT COUNT(*) AS `count` FROM ($query)`";
     }
     final protected function f__count()
     {

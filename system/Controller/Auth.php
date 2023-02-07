@@ -481,4 +481,43 @@ class Auth
 
         return User::details($user_id);
     }
+
+    static function changeUsername()
+    {
+        Plugin::guard();
+        $user_id = Plugin::user()['id'];
+        $current_user = Plugin::user()['user'];
+        
+        $body = Request::bodySchema([
+            'user' => [
+                'alias' => 'Username',
+                'type' => 'string',
+                'min' => 5,
+                'max' => 32,
+                'regex' => '/^[a-zA-Z0-9_]+$/',
+                'required' => true,
+            ],
+        ]);
+
+        if ($body['user'] === $current_user) {
+            throw new Exception('New username can\'t be the same as the old one', 400);
+        }
+
+        if (User::where('user', $body['user'])->where('id', '!=', $user_id)->count() > 0) {
+            throw new Exception('Username already in use', 400);
+        }
+
+        if (User::where('last_user', $body['user'])->where('id', $user_id)->count() > 0) {
+            throw new Exception('Cannot reuse old username', 400);
+        }
+
+        $update = User::dataUpdate($user_id, [
+            'user' => $body['user'],
+            'updated_at' => Date::parse('now', 'datetime'),
+        ]);
+
+        $res = static::createSignIn($user_id);
+
+
+    }
 }
