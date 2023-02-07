@@ -50,15 +50,10 @@ class User extends Model
     protected function f__details(int $id)
     {
         $query = DB::raw("SELECT auth_users.*, 
-
                 (SELECT GROUP_CONCAT(NAME, '=', value) FROM auth_users_info WHERE auth_users_info.user_id = auth_users.id) AS info, 
-
                 (SELECT GROUP_CONCAT(role) FROM auth_users_role WHERE auth_users_role.user_id = auth_users.id) AS roles,
-
                 (SELECT GROUP_CONCAT(email) FROM auth_users_email WHERE auth_users_email.user_id = auth_users.id AND verified = 1) AS emails,
-
                 (SELECT GROUP_CONCAT(email) FROM auth_users_email WHERE auth_users_email.user_id = auth_users.id AND verified = 0) AS pending_emails
-
             FROM
                 auth_users;
             WHERE

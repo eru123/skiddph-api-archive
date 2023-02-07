@@ -52,7 +52,7 @@ class Auth
         try {
             $user = Users::find($user['id'], true, true);
         } catch (Exception $e) {
-            throw new Error('Failed to login', 500);
+            throw new Error('Failed to login', 500, $e);
         }
 
         $payload_keys_default = ['id', 'user', 'roles'];
@@ -88,7 +88,7 @@ class Auth
         try {
             $user = Users::find($id, true, true);
         } catch (Exception $e) {
-            throw new Error('Failed to direct login', 500);
+            throw new Error('Failed to direct login', 500, $e);
         }
 
         $payload_keys_default = ['id', 'user', 'roles'];

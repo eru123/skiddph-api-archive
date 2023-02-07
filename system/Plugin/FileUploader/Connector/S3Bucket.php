@@ -24,7 +24,7 @@ class S3Bucket
                 ]
             ]);
         } catch (Exception $e) {
-            throw new Exception($e->getMessage(), 500);
+            throw new Exception($e->getMessage(), 500, $e);
         }
 
         return $s3;
@@ -88,7 +88,7 @@ class S3Bucket
             $orm->commit();
         } catch (S3Exception $e) {
             $orm->rollback();
-            throw new Exception($e->getMessage(), 500);
+            throw new Exception($e->getMessage(), 500, $e);
         } catch (Exception $e) {
             $orm->rollback();
             throw $e;

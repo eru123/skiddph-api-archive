@@ -79,7 +79,7 @@ class Email
 
             return $verify_id;
         } catch (Exception $e) {
-            throw new Exception('Failed to create verification code', 500);
+            throw new Exception('Failed to create verification code due to: '.$e->getMessage(), 500, $e);
         }
     }
 

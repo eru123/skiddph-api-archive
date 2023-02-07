@@ -15,7 +15,7 @@ class Parser
         try {
             $sql = @self::{$action}($query);
         } catch (Exception $e) {
-            throw new Exception("Invalid query action: $action");
+            throw new Exception("Invalid query action: $action", 500, $e);
         }
         // echo "SQL: ", $sql, PHP_EOL;
         return $sql;

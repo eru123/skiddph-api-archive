@@ -14,16 +14,15 @@ $auth->post('/email/send', [AuthController::class, 'emailSend']);
 $auth->post('/email/verify', [AuthController::class, 'emailVerify']);
 $auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify']);
 $auth->post('/email/add', [AuthController::class, 'addEmail']);
+$auth->post('/email/remove', [AuthController::class, 'removeEmail']);
 
-// $auth->post('/verify/email/{verifyId}', [Auth::class, 'verifyEmail']);
-// $auth->post('/user/add/email', [Auth::class, 'addEmail']);
-// $auth->post('/user/remove/email', [Auth::class, 'removeEmail']);
 // $auth->post('/user/change/user', [Auth::class, 'changeUsername']);
 // $auth->post('/user/change/password', [Auth::class, 'changePassword']);
 // $auth->post('/user/{userId}/add/role', [Auth::class, 'addRole']);
 // $auth->post('/user/{userId}/remove/role', [Auth::class, 'removeRole']);
-// $auth->get('/user', [Auth::class, 'getUser']);
-// $auth->get('/user/{userId}', [Auth::class, 'getUser']);
+
+$auth->get('/user', [AuthController::class, 'user']);
+$auth->get('/user/{userId}', [AuthController::class, 'user']);
 
 // FILEUPLOADER PLUGIN
 $fileUploader = new Router();

@@ -275,7 +275,7 @@ class Auth
         ];
     }
     static function emailVerify($data = [])
-    {   
+    {
         $used_token = false;
 
         if (isset($data['emailToken'])) {
@@ -334,7 +334,7 @@ class Auth
             }
 
             UserInfo::commit();
-        
+
             if ($used_token) {
                 return Response::redirect($success_url);
             }
@@ -348,10 +348,10 @@ class Auth
             }
 
             if ($e->getCode() === 0) {
-                throw new Exception('Failed to verify email', 500);
+                throw new Exception('Failed to verify email', 500, $e);
             }
 
-            throw new Exception($e->getMessage(), $e->getCode());
+            throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
     }
     static function addEmail()
@@ -400,10 +400,85 @@ class Auth
             UserEmail::rollback();
 
             if ($e->getCode() === 0) {
-                throw new Exception('Failed to add email', 500);
+                throw new Exception('Failed to add email', 500, $e);
             }
 
-            throw new Exception($e->getMessage(), $e->getCode());
+            throw new Exception($e->getMessage(), $e->getCode(), $e);
         }
+    }
+    static function removeEmail()
+    {
+        Plugin::guard();
+        $user_id = Plugin::user()['id'];
+        $primary_email = Plugin::user()['primary_email'];
+
+        $body = Request::bodySchema([
+            'email' => [
+                'alias' => 'Email',
+                'type' => 'string',
+                'regex' => '/^[\w.+-]+@[\w]+\.[\w.]+$/',
+                'required' => true,
+            ],
+            'emails' => [
+                'alias' => 'Emails',
+                'type' => 'array',
+                'required' => false,
+            ],
+        ]);
+
+        if (isset($body['emails']) && isset($body['email'])) {
+            throw new Exception('Cannot specify both emails and email', 400);
+        }
+
+        if (isset($body['emails'])) {
+            $emails = $body['emails'];
+        } else {
+            $emails = [$body['email']];
+        }
+
+        $emails = array_map(function ($email) {
+            return trim($email);
+        }, $emails);
+
+        $emails = array_filter($emails, function ($email) {
+            return !empty($email);
+        });
+
+        if (empty($emails)) {
+            throw new Exception('No emails specified', 400);
+        }
+
+        $emails = array_unique($emails);
+        if ($primary_email && in_array($primary_email, $emails)) {
+            throw new Exception('Cannot remove primary email', 400);
+        }
+
+        $deleteVerified = UserEmail::safeDelete($user_id, $emails, true);
+        $deleteUnverified = UserEmail::safeDelete($user_id, $emails, false);
+
+        $total = $deleteVerified + $deleteUnverified;
+
+        if ($total === 0) {
+            throw new Exception('No emails removed', 400);
+        }
+
+        $res = $deleteVerified ? static::createSignIn($user_id) : [];
+        $res['success'] = true;
+        $res['deleted'] = $total;
+
+        return $res;
+    }
+
+    static function user($p)
+    {
+        Plugin::guard();
+        $user_id = Plugin::user()['id'];
+
+        if (isset($p['userId'])) {
+            Plugin::accessControl('SUPERADMIN,VIEWUSER,MANAGEUSER');
+            $user_id = $p['userId'];
+        }
+
+        return User::details($user_id);
     }
 }

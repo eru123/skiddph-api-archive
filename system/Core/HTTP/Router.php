@@ -16,13 +16,29 @@ class Router
 
     public function __construct()
     {
-        $default_callback = function ($msg, $code) {
+        $default_callback = function ($e) {
             header('Content-Type: application/json');
-            http_response_code($code);
-            echo json_encode([
-                'code' => $code,
-                'error' => $msg,
-            ]);
+            http_response_code($e->getCode());
+
+            $res = [
+                'code' => $e->getCode(),
+                'error' => $e->getMessage(),
+            ];
+
+            if (e('ENV') === 'development') {
+                $res['debug'] = [
+                    'trace' => $e->getPrevious() ? $e->getPrevious()->getTrace() : $e->getTrace(),
+                    'post' => $_POST,
+                    'get' => $_GET,
+                    'files' => $_FILES,
+                    'request' => $_REQUEST,
+                    'env' => $_ENV,
+                    'server' => $_SERVER,
+                ];
+            }
+
+            echo json_encode($res);
+            exit;
         };
 
         $this->exception_cb = $default_callback;
@@ -160,21 +176,29 @@ class Router
 
     public function run()
     {
-        try {
-            $res = $this->exec();
+        $response = function ($res, $extra = null) {
             if (is_array($res)) {
                 header('Content-Type: application/json');
                 http_response_code(200);
                 echo json_encode($res);
+                exit(0);
             } else if (is_null($res)) {
                 http_response_code(204);
-            } else {
-                echo $res;
+                exit(0);
             }
+
+            echo $res;
+            exit(0);
+        };
+
+        try {
+            $res = $this->exec();
+            $response($res);
         } catch (Exception $e) {
             $fn = $this->exception_cb;
             if (is_callable($fn)) {
-                call_user_func_array($fn, [$e->getMessage(), (int) $e->getCode(), $e]);
+                $res = call_user_func_array($fn, [$e]);
+                $response($res);
             } else {
                 throw $e;
             }
@@ -182,11 +206,14 @@ class Router
         } catch (Error $e) {
             $fn = $this->error_cb;
             if (is_callable($fn)) {
-                call_user_func_array($fn, [$e->getMessage(), 500, $e]);
+                $e->code = 500;
+                $res = call_user_func_array($fn, [$e]);
+                $response($res);
             } else {
                 throw $e;
             }
-            exit;
         }
+
+        exit(0);
     }
 }
