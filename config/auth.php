@@ -37,7 +37,7 @@ return [
     /**
      * Email verification token expiration
      */
-    'email_verification_expire_at' => 'now + 24mins',
+    'email_verification_expire_at' => '24mins',
     /**
      * Must be verified to use services
      */
@@ -45,7 +45,7 @@ return [
     /**
      * Auto email verification
      */
-    'email_auto_verify' => false,
+    'email_auto_verify' => true,
     /**
      * Allow sign up
      */
@@ -53,5 +53,13 @@ return [
     /**
      * Email resend if time less than or equal to specified time
      */
-    'email_resend_if_time' => 'now - 5mins',
+    'email_resend_if_time' => '5mins',
+    /**
+     * Email Verification Success URL
+     */
+    'email_verify_success_url' => pcfg('app.client').'/email-verify-success',
+    /**
+     * Email Verification Fail URL
+     */
+    'email_verify_fail_url' => pcfg('app.client').'/email-verify-fail'
 ];

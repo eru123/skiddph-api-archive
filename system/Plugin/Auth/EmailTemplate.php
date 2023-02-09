@@ -19,7 +19,7 @@ class EmailTemplate
 
     static function new (SMTP &$smtp, array $data): void
     {
-        $required = ['user_id', 'user', 'email', 'code', 'name'];
+        $required = ['user_id', 'user', 'email', 'code'];
         foreach ($required as $key) {
             if (empty($data[$key])) {
                 throw new Exception('Invalid ' . $key, 400);

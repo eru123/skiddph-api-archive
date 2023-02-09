@@ -184,7 +184,7 @@ class JWT
 
             return self::encode($payload, pcfg('auth.secret'));
         } catch (Exception $e) {
-            throw new Exception('Invalid refresh token', 401);
+            throw new Exception('Invalid refresh token', 401, $e);
         }
     }
 

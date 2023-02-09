@@ -1,28 +1,28 @@
 <?php
 
-use SkiddPH\Core\HTTP\Router;
-use SkiddPH\Plugin\Auth\Controller as Auth;
-use SkiddPH\Controller\Auth as AuthController;
+use eru123\Router\Router;
+use SkiddPH\Controller\Auth;
 use SkiddPH\Plugin\FileUploader\Controller as FileUploader;
 
 // AUTH PLUGIN
 $auth = new Router();
 $auth->base('/auth');
-$auth->post('/signin', [AuthController::class, 'signin']);
-$auth->post('/signup', [AuthController::class, 'signup']);
-// $auth->post('/verify/resend/email', [Auth::class, 'resendEmail']);
-$auth->post('/email/send', [AuthController::class, 'emailSend']);
-$auth->post('/email/verify', [AuthController::class, 'emailVerify']);
-$auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify']);
-// $auth->post('/verify/email/{verifyId}', [Auth::class, 'verifyEmail']);
-// $auth->post('/user/add/email', [Auth::class, 'addEmail']);
-// $auth->post('/user/remove/email', [Auth::class, 'removeEmail']);
-// $auth->post('/user/change/user', [Auth::class, 'changeUsername']);
-// $auth->post('/user/change/password', [Auth::class, 'changePassword']);
+$auth->post('/signin', [Auth::class, 'signin']);
+$auth->post('/signup', [Auth::class, 'signup']);
+$auth->post('/email/send', [Auth::class, 'emailSend']);
+$auth->post('/email/verify', [Auth::class, 'emailVerify']);
+$auth->get('/email/verify/{emailToken}', [Auth::class, 'emailVerify']);
+$auth->post('/email/add', [Auth::class, 'addEmail']);
+$auth->post('/email/remove', [Auth::class, 'removeEmail']);
+
+$auth->post('/user/update/username', [Auth::class, 'updateUsername']);
+$auth->post('/user/update/password', [Auth::class, 'updatePassword']);
 // $auth->post('/user/{userId}/add/role', [Auth::class, 'addRole']);
 // $auth->post('/user/{userId}/remove/role', [Auth::class, 'removeRole']);
-// $auth->get('/user', [Auth::class, 'getUser']);
-// $auth->get('/user/{userId}', [Auth::class, 'getUser']);
+
+// $auth->get('/users', [Auth::class, 'users']);
+$auth->get('/user', [Auth::class, 'user']);
+$auth->get('/user/{userId}', [Auth::class, 'user']);
 
 // FILEUPLOADER PLUGIN
 $fileUploader = new Router();

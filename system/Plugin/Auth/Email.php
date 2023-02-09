@@ -5,8 +5,9 @@ namespace SkiddPH\Plugin\Auth;
 use SkiddPH\Helper\Date;
 use SkiddPH\Helper\Rand;
 use SkiddPH\Model\EmailVerification;
-use SkiddPH\Model\UserInfo;
+use SkiddPH\Model\UserEmail;
 use SkiddPH\Plugin\DB\Row;
+use SkiddPH\Plugin\DB\DB;
 use SkiddPH\Plugin\SMTP\SMTP;
 use Exception;
 
@@ -14,31 +15,53 @@ class Email
 {
     public static function send($data = []): int
     {
-        $required = ['user_id', 'email', 'type', 'name', 'user'];
+        $required = ['user_id', 'email', 'type', 'user'];
+        $tmp = [];
         foreach ($required as $key) {
             if (empty($data[$key])) {
                 throw new Exception('Invalid ' . $key, 400);
             }
+            $tmp[$key] = $data[$key];
         }
 
-        $exp = pcfg('email_verification_expire_at', 'now + 24mins');
+        $data = $tmp;
+
+        if (method_exists(static::class, 'send__' . $data['type'])) {
+            static::{'send__' . $data['type']}($data['email'], $data);
+        }
+
+        $expm = Date::parse(pcfg('email_verification_expire_at', '24mins'), 'minutes');
+        $exp = Date::parse("now - $expm minutes", 'datetime');
+        $jwt_exp = Date::parse("now + $expm minutes");
+
+        $ver = Date::parse(pcfg('auth.email_resend_if_time', '5mins'), 'minutes');
+        $ver = Date::parse("now - $ver minutes", 'datetime');
+
         $verify = EmailVerification::where('user_id', $data['user_id'])
-            ->where('updated_at', 'lte', Date::parse(pcfg('auth.email_resend_if_time', 'now - 5mins'), 'datetime'))
-            ->where('updated_at', 'gte', Date::parse("now - ($exp)", 'datetime'))
+            ->where('created_at', 'gte', DB::raw("TIMESTAMP(?)", [$ver]))
+            ->where('created_at', 'gte', DB::raw("TIMESTAMP(?)", [$exp]))
             ->where('type', $data['type'])
+            ->where('status', false)
+            ->order('created_at', 'desc')
             ->first();
 
         if ($verify) {
             return $verify->id;
         }
 
-
-
         try {
             $data['code'] = Rand::int(100000, 999999);
-            $verify_id = EmailVerification::newCode($data);
+            $verify_id = EmailVerification::insert([
+                'user_id' => $data['user_id'],
+                'code' => $data['code'],
+                'email' => $data['email'],
+                'type' => $data['type'],
+                'status' => false,
+                'created_at' => Date::parse('now', 'datetime')
+            ]);
+
             if (!$verify_id) {
-                throw new Exception('Failed to create verification code', 500);
+                throw new Exception('Failed to insert verification code', 500);
             }
 
             $data['token'] = JWT::encode([
@@ -46,7 +69,7 @@ class Email
                 'user_id' => $data['user_id'],
                 'code' => $data['code'],
                 'type' => $data['type'],
-                'exp' => $exp,
+                'exp' => $jwt_exp,
                 'iat' => 'now'
             ]);
 
@@ -56,31 +79,55 @@ class Email
 
             return $verify_id;
         } catch (Exception $e) {
-            throw new Exception('Failed to create verification code', 500);
+            throw new Exception('Failed to create verification code due to: '.$e->getMessage(), 500, $e);
+        }
+    }
+
+    public static function send__new($email, $data)
+    {
+        if (!pcfg('auth.allow_signup', true)) {
+            throw new Exception('Sign up is not allowed', 403);
+        }
+
+        if (pcfg('auth.email_auto_verify')) {
+            throw new Exception('Email auto verify is enabled no need to send verification code', 400);
+        }
+
+        if (UserEmail::inUse($email)) {
+            throw new Exception('Email already in use', 400);
+        }
+
+        if (UserEmail::inPending($data['user_id'], $email)) {
+            throw new Exception('Email already in pending', 400);
         }
     }
 
     public static function verify(array $data)
     {
-        $required = ['user_id', 'code', 'type'];
+        $required = ['verify_id', 'user_id', 'code', 'type'];
         foreach ($required as $key) {
-            if (empty((string) $data[$key])) {
+            if (empty($data[$key])) {
                 throw new Exception('Invalid ' . $key, 400);
             }
         }
 
-        $exp = pcfg('email_verification_expire_at', 'now + 24mins');
-        $email = EmailVerification::where('user_id', $data['user_id'])
-            ->where('updated_at', 'gte', Date::parse("now - ($exp)", 'datetime'))
+        $expm = Date::parse(pcfg('email_verification_expire_at', '24mins'), 'minutes');
+        $exp = Date::parse("now - $expm minutes", 'datetime');
+        $email = EmailVerification::where('id', $data['verify_id'])
+            ->where('user_id', $data['user_id'])
+            ->where('created_at', 'gte', DB::raw("TIMESTAMP(?)", [$exp]))
             ->where('type', $data['type'])
             ->where('code', $data['code'])
-            ->where('status', 0)
-            ->order('updated_at', 'desc')
+            ->where('status', false)
+            ->order('created_at', 'desc')
             ->first();
 
         if (!$email) {
             throw new Exception('Invalid verification code', 400);
         }
+
+        $email->status = true;
+        $email->update();
 
         if (method_exists(static::class, 'onverify__' . $data['type'])) {
             return static::{'onverify__' . $data['type']}($email);
@@ -88,24 +135,24 @@ class Email
 
         throw new Exception('Invalid verification type', 400);
     }
-
     protected static function onverify__new(Row $email)
     {
-        $email->status = 1;
-        $email->update();
-
-        if (UserInfo::isValueExists('email', $email->email)) {
+        if (UserEmail::inUse($email->email)) {
             throw new Exception('Email already verified', 400);
         }
 
-        UserInfo::removeFor($email->user_id, [
-            'pending_email' => $email->email,
-        ]);
-
-        if (UserInfo::insertFor($email->user_id, ['email' => $email->email])) {
-            return \SkiddPH\Controller\Auth::createSignIn($email->user_id);
+        $email = UserEmail::where('user_id', $email->user_id)
+            ->where('email', $email->email)
+            ->where('verified', false)
+            ->first();
+        
+        if (!$email) {
+            throw new Exception('Invalid email', 400);
         }
 
-        throw new Exception('Failed to verify email', 500);
+        $email->verified = true;
+        $email->update();
+
+        return true;
     }
 }
