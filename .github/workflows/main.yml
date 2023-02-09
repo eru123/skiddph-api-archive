@@ -18,6 +18,9 @@ jobs:
                 file: .env
                 prefix: ENV_
               env:
+                ENV_APP_NAME: ${{ secrets.APP_NAME }}
+                ENV_API_URL: ${{ secrets.API_URL }}
+                ENV_CLIENT_URL: ${{ secrets.CLIENT_URL }}
                 ENV_JWT_SECRET: ${{ secrets.JWT_SECRET }}
                 ENV_JWT_REFRESH: ${{ secrets.JWT_REFRESH }}
                 ENV_DEFAULT_DB_DSN: ${{ secrets.DEFAULT_DB_DSN }}
@@ -29,6 +32,10 @@ jobs:
                 ENV_SMTP_PASS: ${{ secrets.SMTP_PASS }}
                 ENV_SMTP_FROM: ${{ secrets.SMTP_FROM }}
                 ENV_SMTP_FROM_NAME: ${{ secrets.SMTP_FROM_NAME }}
+                ENV_SMTP_REPLY_TO: ${{ secrets.SMTP_REPLY_TO }}
+                ENV_SMTP_REPLY_TO_NAME: ${{ secrets.SMTP_REPLY_TO_NAME }}
+                ENV_FILE_UPLOADER_CONNECTOR: ${{ secrets.FILE_UPLOADER_CONNECTOR }}
+                ENV_FILE_UPLOADER_MAX_UPLOAD_SIZE: ${{ secrets.FILE_UPLOADER_MAX_UPLOAD_SIZE }}
                 ENV_GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
                 ENV_GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
                 ENV_S3_KEY: ${{ secrets.S3_KEY }}
