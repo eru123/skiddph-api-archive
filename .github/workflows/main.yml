@@ -6,6 +6,9 @@ on:
 
 jobs:
     deploy:
+        environment: 
+            name: Production
+            url: ${{ secrets.API_URL }}
         name: Deploy
         runs-on: ubuntu-latest
         steps:
