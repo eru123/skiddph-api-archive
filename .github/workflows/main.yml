@@ -8,7 +8,7 @@ jobs:
     deploy:
         environment: 
             name: Production
-            url: ${{ secrets.API_URL }}
+            url: https://api.skiddph.com
         name: Deploy
         runs-on: ubuntu-latest
         steps:
