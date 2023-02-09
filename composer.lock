@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e8f740cccf2c3c8de7692f8b58981528",
+    "content-hash": "86678f41ced1f9da56571993b122007d",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -379,6 +379,43 @@
                 "source": "https://github.com/cakephp/utility"
             },
             "time": "2022-11-06T06:40:44+00:00"
+        },
+        {
+            "name": "eru123/router",
+            "version": "0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/eru123/php-router.git",
+                "reference": "9873a4e4dae801da9ad61eb5d365e9a79d678b8c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/eru123/php-router/zipball/9873a4e4dae801da9ad61eb5d365e9a79d678b8c",
+                "reference": "9873a4e4dae801da9ad61eb5d365e9a79d678b8c",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "eru123\\Router\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "authors": [
+                {
+                    "name": "eru123",
+                    "email": "39824083+eru123@users.noreply.github.com"
+                }
+            ],
+            "description": "A PHP Library for handling Routes using a Parent-Child Model",
+            "support": {
+                "issues": "https://github.com/eru123/php-router/issues",
+                "source": "https://github.com/eru123/php-router/tree/0.1"
+            },
+            "time": "2023-02-07T17:05:20+00:00"
         },
         {
             "name": "graham-campbell/result-type",

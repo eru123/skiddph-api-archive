@@ -1,29 +1,28 @@
 <?php
 
-use SkiddPH\Core\HTTP\Router;
-// use SkiddPH\Plugin\Auth\Controller as Auth;
-use SkiddPH\Controller\Auth as AuthController;
+use eru123\Router\Router;
+use SkiddPH\Controller\Auth;
 use SkiddPH\Plugin\FileUploader\Controller as FileUploader;
 
 // AUTH PLUGIN
 $auth = new Router();
 $auth->base('/auth');
-$auth->post('/signin', [AuthController::class, 'signin']);
-$auth->post('/signup', [AuthController::class, 'signup']);
-$auth->post('/email/send', [AuthController::class, 'emailSend']);
-$auth->post('/email/verify', [AuthController::class, 'emailVerify']);
-$auth->get('/email/verify/{emailToken}', [AuthController::class, 'emailVerify']);
-$auth->post('/email/add', [AuthController::class, 'addEmail']);
-$auth->post('/email/remove', [AuthController::class, 'removeEmail']);
+$auth->post('/signin', [Auth::class, 'signin']);
+$auth->post('/signup', [Auth::class, 'signup']);
+$auth->post('/email/send', [Auth::class, 'emailSend']);
+$auth->post('/email/verify', [Auth::class, 'emailVerify']);
+$auth->get('/email/verify/{emailToken}', [Auth::class, 'emailVerify']);
+$auth->post('/email/add', [Auth::class, 'addEmail']);
+$auth->post('/email/remove', [Auth::class, 'removeEmail']);
 
-$auth->post('/user/update/username', [AuthController::class, 'updateUsername']);
-$auth->post('/user/update/password', [AuthController::class, 'updatePassword']);
+$auth->post('/user/update/username', [Auth::class, 'updateUsername']);
+$auth->post('/user/update/password', [Auth::class, 'updatePassword']);
 // $auth->post('/user/{userId}/add/role', [Auth::class, 'addRole']);
 // $auth->post('/user/{userId}/remove/role', [Auth::class, 'removeRole']);
 
-// $auth->get('/users', [AuthController::class, 'users']);
-$auth->get('/user', [AuthController::class, 'user']);
-$auth->get('/user/{userId}', [AuthController::class, 'user']);
+// $auth->get('/users', [Auth::class, 'users']);
+$auth->get('/user', [Auth::class, 'user']);
+$auth->get('/user/{userId}', [Auth::class, 'user']);
 
 // FILEUPLOADER PLUGIN
 $fileUploader = new Router();

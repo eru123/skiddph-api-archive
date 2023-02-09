@@ -26,7 +26,10 @@ class Bootstrapper
         else
             return;
 
-        Dotenv::createImmutable($dir)->load();
+        if (file_exists(rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . '.env')) {
+            Dotenv::createImmutable($dir)->load();
+        }
+        
         $files = scandir($dir, SCANDIR_SORT_ASCENDING);
         foreach ($files as $file) {
             if (file_exists($file)) {
