@@ -22,7 +22,7 @@ jobs:
                 prefix: ENV_
               env:
                 ENV_APP_NAME: ${{ secrets.APP_NAME }}
-                ENV_API_URL: ${{ secrets.API_URL }}
+                ENV_API_URL: https://api.skiddph.com
                 ENV_CLIENT_URL: ${{ secrets.CLIENT_URL }}
                 ENV_JWT_SECRET: ${{ secrets.JWT_SECRET }}
                 ENV_JWT_REFRESH: ${{ secrets.JWT_REFRESH }}
