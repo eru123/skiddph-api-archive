@@ -1,5 +1,7 @@
 <?php
 
+use SkiddPH\Plugin\DB\Helper;
+
 return [
     /**
      * Collection of Database Configurations.
@@ -8,11 +10,9 @@ return [
     'databases' => [
         /**
          * Default Database Configuration.
+         *  - uses PDO Arguments
          */
         'default' => [
-            /**
-             * PDO DSN
-             */
             e('DEFAULT_DB_DSN', 'mysql:host=localhost;dbname=skiddph'),
             /**
              * PDO Username
@@ -26,13 +26,16 @@ return [
              * PDO Options
              */
             NULL
-        ]
+        ],
         /**
-         * Add more database configurations below by copying the default configuration.
+         * Production Database Configuration
+         * - uses PDO Arguments
+         * - uses DATABASE_URL environment variable from Heroku 
          */
+        'production' => Helper::buildPdoArgs(e('DATABASE_URL'))
     ],
     /**
      * Database Environment to be use.
      */
-    'database' => 'default'
+    'database' => e('DB_ENV') === 'development' ? 'default' : 'production'
 ];
