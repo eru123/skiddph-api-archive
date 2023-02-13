@@ -17,7 +17,11 @@ class Helper {
     }
 
     public static function buildPdoArgs($url) {
-        $pdo_args = [];
+        $pdo_args = [''];
+
+        if (empty($url)) {
+            return $pdo_args;
+        }
     
         $rgx_url = '/^(?P<driver>\w+)+:\/\/(?P<user>[\w]+):(?P<pass>[^@]+)@(?P<host>[^:\/]+):+(?P<port>[\d]+)\/+(?P<db>[\w]+)$/';
         $rgx_pdo = '/(?P<driver>^[\w-]+)|((?P<key>[\w-]+)+=+(?P<value>[^;]+))/';
