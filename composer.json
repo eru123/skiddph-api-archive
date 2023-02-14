@@ -1,6 +1,4 @@
 {
-    "name": "skiddph/api",
-    "description": "An out of the box complete and centralized general purpose API system that aims to power you web development journey.",
     "require": {
         "vlucas/phpdotenv": "^5.5",
         "robmorgan/phinx": "^0.13.3",
@@ -23,6 +21,5 @@
         "aws/aws-sdk-php": [
             "S3"
         ]
-    },
-    "license": "Apache-2.0"
+    }
 }
