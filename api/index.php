@@ -1,36 +1,23 @@
 <?php
 
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
+use eru123\router\Router;
 
-require_once __DIR__ . '/../vendor/autoload.php';
+$v1 = require __DIR__ . '/v1/index.php';
 
-use SkiddPH\Core\Bootstrapper;
-use SkiddPH\Core\HTTP\Request;
-use eru123\Router\Router;
+$api = new Router();
+$api->debug();
+$api->base('/api');
 
-Bootstrapper::init(__DIR__ . '/..');
+$api->bootstrap([
 
-if (e('ENV') === 'development') {
-    ini_set('display_errors', 1);
-    ini_set('display_startup_errors', 1);
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', 0);
-    ini_set('display_startup_errors', 0);
-    error_reporting(0);
-}
+]);
 
-Request::allowCORS();
+$api->fallback('/', function () {
+    return [
+        'error' => 'Route Not found',
+    ];
+});
 
-$drc = require(__DIR__ . '/drc.php');
-$v1 = require(__DIR__ . '/v1.php');
+$api->child($v1);
 
-$router = new Router();
-$router->base('/api');
-$router->exception($drc);
-$router->error($drc);
-
-$router->add($v1);
-$router->run();
+return $api;
