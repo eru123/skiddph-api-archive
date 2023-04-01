@@ -5,12 +5,12 @@
         "vlucas/phpdotenv": "^5.5",
         "robmorgan/phinx": "^0.13.3",
         "phpmailer/phpmailer": "^6.7",
-        "aws/aws-sdk-php": "^3.255",
-        "eru123/router": "^0.1.0"
+        "aws/aws-sdk-php": "^3.255"
     },
     "autoload": {
         "psr-4": {
-            "SkiddPH\\": "system/"
+            "SkiddPH\\": "system/",
+            "eru123\\": "system/eru123/"
         },
         "files": [
             "system/functions.php"
