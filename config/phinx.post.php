@@ -2,13 +2,16 @@
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-$workdir = __DIR__ . '/..';
+use SkiddPH\Core\Bootstrapper;
+use SkiddPH\Plugin\DB\DB;
+
+$workdir = realpath(__DIR__ . '/..');
 
 /**
  * Load the config.php file
  * to get the database config
  */
-\SkiddPH\Core\Bootstrapper::init($workdir);
+Bootstrapper::init($workdir);
 
 /** 
  * The Initial and Default Phinx Config
@@ -16,7 +19,7 @@ $workdir = __DIR__ . '/..';
  */
 $config = [
     'paths' => [
-        'migrations' => workdir() . '/db/migrations',
+        'migrations' => Bootstrapper::phinxMigrationPaths(),
         'seeds' => workdir() . '/db/seeds'
     ],
     'environments' => [
@@ -29,7 +32,7 @@ $config = [
  * Transform the config to Phinx Config 
  * @var mixed $phinx 
  */
-$phinx = \SkiddPH\Plugin\DB\DB::phinxConfig();
+$phinx = DB::phinxConfig();
 
 // Merge the config
 $config['environments'] = array_merge($config['environments'], $phinx);
