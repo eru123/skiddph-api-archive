@@ -10,6 +10,11 @@ trait Base
     use Helper;
 
     /**
+     * Name in the ORM map
+     */
+    protected $name = null;
+
+    /**
      * @var ORM
      */
     protected $orm = null;
@@ -34,7 +39,7 @@ trait Base
      */
     protected $indexes = [];
 
-    public function __construct(ORM $orm)
+    public function __construct(ORM $orm = null)
     {
         $this->orm = $orm;
     }
@@ -61,6 +66,14 @@ trait Base
     public function table(): string
     {
         return $this->table;
+    }
+
+    /**
+     * Get name
+     */
+    public function name(): string
+    {
+        return $this->name;
     }
 
     /**

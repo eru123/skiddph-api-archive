@@ -58,6 +58,10 @@ class DB
             $parts = explode(';', $value[0]);
             $adapter = null;
             foreach ($parts as $part) {
+                if (empty($part)) {
+                    continue;
+                }
+                
                 $part = explode('=', $part);
                 $part_key = strtolower($part[0]);
                 $part_val = $part[1];
