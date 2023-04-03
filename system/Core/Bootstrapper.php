@@ -124,4 +124,32 @@ class Bootstrapper
         $key = null;
         $file = null;
     }
+
+    public static function phinxMigrationPaths(): array {
+        $class_map = require workdir() . '/vendor/composer/autoload_classmap.php';
+        $migrations = [
+            workdir() . '/db/migrations'
+        ];
+
+        foreach ($class_map as $class => $path) {
+            $classarr = explode('\\', $class);
+            if (end($classarr) === 'Phinx' && method_exists($class, 'migrations')) {
+                $external = call_user_func([$class, 'migrations']);
+                if (is_array($external)) {
+                    $migrations = array_merge($migrations, $external);
+                } else {
+                    $migrations[] = $external;
+                }
+            }
+        }
+
+        foreach ($migrations as $key => $path) {
+            $migrations[$key] = realpath($path);
+            if (!$migrations[$key]) {
+                unset($migrations[$key]);
+            }
+        }
+
+        return array_unique($migrations);
+    }
 }
