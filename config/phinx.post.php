@@ -36,4 +36,5 @@ $phinx = DB::phinxConfig();
 
 // Merge the config
 $config['environments'] = array_merge($config['environments'], $phinx);
+
 return $config;

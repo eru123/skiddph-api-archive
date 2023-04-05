@@ -70,7 +70,9 @@ trait Composer
         $orm = static::create(...$cfg);
         foreach ($models as $model) {
             $instance = new $model($orm);
-            $orm->add($instance->name(), $model);
+            $name = $instance->name();
+            $orm->add($name, $model);
+            $instance = null;
         }
 
         return $orm;

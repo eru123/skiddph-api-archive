@@ -52,6 +52,11 @@ trait Model
             throw new Exception("Model $name not found");
         }
 
+        // if is object, return object
+        if (is_object($this->models[$name])) {
+            return $this->models[$name];
+        }
+
         return new $this->models[$name]($this, ...$args);
     }
 

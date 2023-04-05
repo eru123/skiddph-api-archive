@@ -1,6 +1,6 @@
 <?php
 
-use SkiddPH\Plugin\DB\Helper;
+// use SkiddPH\Plugin\DB\Helper;
 
 return [
     /**
@@ -32,7 +32,22 @@ return [
          * - uses PDO Arguments
          * - uses DATABASE_URL environment variable from Heroku 
          */
-        'production' => Helper::buildPdoArgs(e('DATABASE_URL'))
+        // 'production' => Helper::buildPdoArgs(e('DATABASE_URL'))
+        'production' => [
+            e('DEFAULT_DB_DSN', 'mysql:host=localhost;dbname=skiddph'),
+            /**
+             * PDO Username
+             */
+            e('DEFAULT_DB_USER', 'root'),
+            /**
+             * PDO Password
+             */
+            e('DEFAULT_DB_PASS', ''),
+            /**
+             * PDO Options
+             */
+            NULL
+        ],
     ],
     /**
      * Database Environment to be use.

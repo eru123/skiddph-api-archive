@@ -9,7 +9,7 @@ final class EmailAttachments extends AbstractMigration
     {
         $table = $this->table('email_attachments');
         $table->addColumn('email_id', 'integer', ['null' => false])
-            ->addColumn('path', 'text', ['null' => true])
+            ->addColumn('path', 'text', ['null' => false])
             ->create();
     }
 }

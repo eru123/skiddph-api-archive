@@ -17,7 +17,13 @@
         ]
     },
     "scripts": {
-        "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices"
+        "pre-autoload-dump": "Aws\\Script\\Composer\\Composer::removeUnusedServices",
+        "post-install-cmd": [
+            "composer dump-autoload --optimize"
+        ],
+        "post-update-cmd": [
+            "composer dump-autoload --optimize"
+        ]
     },
     "extra": {
         "aws/aws-sdk-php": [
