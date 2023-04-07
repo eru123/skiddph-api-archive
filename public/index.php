@@ -6,18 +6,17 @@ use SkiddPH\Core\Bootstrapper;
 use eru123\router\Router;
 use eru123\router\Builtin;
 
-Bootstrapper::init(__DIR__ . '/../');
+Bootstrapper::init(__DIR__ . '/..');
 
 $api = require __DIR__ . '/../api/index.php';
 
 $main = new Router();
-$main->debug();
 $main->bootstrap([
     [Builtin::class, 'remove_header_ads'],
 ]);
 
-if ($_ENV['ENV'] === 'development') {
-
+if (e('ENV', 'production') === 'development') {
+    $main->debug();
     $main->static('/', __DIR__ . '/../private_http_static');
 
     $cfg = @json_decode(file_get_contents(__DIR__ . '/../package.json'), true)['config']['skiddph'] ?? [];
