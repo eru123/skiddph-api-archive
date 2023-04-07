@@ -5,23 +5,21 @@ import packageJson from './package.json'
 export default defineConfig({
   plugins: [vue()],
   alias: {
-    '@/': '/src/',
-    '@http_static/': '/private_http_static/'
+    '@/': '/src/'
   },
+  publicDir: 'private_http_static',
+  base: './',
   build: {
     manifest: true,
     outDir: 'dist',
+    emptyOutDir: true,
     assetsDir: '__',
     rollupOptions: {
       input: {
-        main: './src/main.js'
-      },
-      external: [
-        '/vite.svg'
-      ]
+        main: 'src/main.js',
+      }
     }
   },
-  base: '/',
   server: {
     port: packageJson?.config?.skiddph?.port || 3000
   }

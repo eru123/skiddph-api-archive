@@ -17,8 +17,7 @@
   },
   "config": {
     "skiddph": {
-      "port": 3000,
-      "host": "https://home.skiddph.com"
+      "port": 3000
     }
   }
 }

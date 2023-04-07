@@ -40,6 +40,8 @@ class Builtin
     {
         header_remove('X-Powered-By');
         header_remove('Server');
+        header('X-Powered-By: SKIDD PH');
+        header('Server: SKIDD PH');
     }
 
     public static function response($res, $state)
@@ -64,7 +66,7 @@ class Builtin
     }
 
     public static function error(Throwable $e, RouteState $state)
-    {   
+    {
         http_response_code($e->getCode() ?? 500);
         return static::response([
             'error' => $e->getMessage()

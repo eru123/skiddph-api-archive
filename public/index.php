@@ -12,13 +12,13 @@ $api = require __DIR__ . '/../api/index.php';
 
 $main = new Router();
 $main->debug();
-// $main->bootstrap([
-//     [Builtin::class, 'remove_header_ads'],
-// ]);
-
-$main->static('/', __DIR__ . '/../private_http_static');
+$main->bootstrap([
+    [Builtin::class, 'remove_header_ads'],
+]);
 
 if ($_ENV['ENV'] === 'development') {
+
+    $main->static('/', __DIR__ . '/../private_http_static');
 
     $cfg = @json_decode(file_get_contents(__DIR__ . '/../package.json'), true)['config']['skiddph'] ?? [];
     $host = @$cfg['host'] ?: 'localhost';
@@ -35,16 +35,13 @@ if ($_ENV['ENV'] === 'development') {
     curl_close($ch);
 
     if ($output === false) {
-        echo 'Vite is not running. Please run "npm run dev" in the root directory.';
+        echo "Vite is not running in <a href=\"$base_uri\">$base_uri</a>. Please run \"npm run dev\" in the root directory.";
         exit;
     }
 
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
     header('Cache-Control: post-check=0, pre-check=0', false);
     header('Pragma: no-cache');
-
-    header('Server: SkiddPH');
-    header('X-Powered-By: SKIDD PH');
 
     $main->static('/src/', __DIR__ . '/../src');
     $main->fallback('/', function () use ($base_uri) {
@@ -72,17 +69,23 @@ if ($_ENV['ENV'] === 'development') {
 
     $dist = __DIR__ . '/../dist';
 
-    $main->static('/', $dist);
+    $main->static('/', $dist, function ($state) {
+        $basename = basename(@$state->params['file']);
+        if ($basename === 'manifest.json' || $basename === 'index.html') {
+            return $state->skip();
+        }
+        return $state->next();
+    });
+
     $main->fallback('/', function () use ($dist) {
-        header('Server: SkiddPH');
-        header('X-Powered-By: SKIDD PH');
+
         $manifest = json_decode(file_get_contents($dist . '/manifest.json'), true);
         $entry = 'main.js';
         $css = [];
         foreach ($manifest as $map) {
             if (@$map['isEntry'] === true) {
                 $entry = $map['file'];
-                $css = $map['css'];
+                $css = @$map['css'] ?? [];
                 break;
             }
         }
@@ -102,7 +105,7 @@ if ($_ENV['ENV'] === 'development') {
 
         <body>
             <div id="app"></div>
-            <script src="/<?= $entry ?>"></script>
+            <script type="module" src="/<?= $entry ?>"></script>
         </body>
 
         </html>
