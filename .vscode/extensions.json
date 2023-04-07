@@ -1,6 +1,8 @@
 {
     "recommendations": [
         "natizyskunk.sftp",
-        "devsense.phptools-vscode"
+        "devsense.phptools-vscode",
+        "Vue.volar",
+        "Vue.vscode-typescript-vue-plugin"
     ]
 }
