@@ -11,7 +11,6 @@ Bootstrapper::init(__DIR__ . '/..');
 $api = require __DIR__ . '/../api/index.php';
 
 $main = new Router();
-$main->debug();
 $main->bootstrap([
     [Builtin::class, 'remove_header_ads'],
 ]);
