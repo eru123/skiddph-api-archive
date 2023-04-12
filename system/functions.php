@@ -1,5 +1,6 @@
 <?php
 
+use eru123\router\Router;
 use SkiddPH\Core\Config;
 use SkiddPH\Helper\Date;
 
@@ -67,7 +68,7 @@ function pcfg($key = '', $default = null)
  */
 function sess($key, $value = null, $default = null)
 {
-    $data = & $_SESSION;
+    $data = &$_SESSION;
     if (empty($data)) {
         $data = [];
     }
@@ -78,7 +79,7 @@ function sess($key, $value = null, $default = null)
             $data[$key] = [];
         }
 
-        $data = & $data[$key];
+        $data = &$data[$key];
     }
 
     if (isset($value)) {
@@ -133,4 +134,113 @@ function datetime_init()
     sys('time', floor(sys('ms')));
     sys('date', date('Y-m-d H:i:s', sys('time')));
     Date::setTime(sys('time'));
+}
+
+/**
+ * Vite Routing Injector
+ */
+
+function vite(Router &$router, string $path = '/', array $cfg = [])
+{
+    $forbidden_files = [
+        'manifest.json',
+        'index.html',
+    ];
+
+    $main = @$cfg['main'] ?: 'src/main.js';
+
+    if (e('ENV', 'production') === 'development') {
+        $router->static($path, __DIR__ . '/../private_http_static');
+        $cfg = @json_decode(file_get_contents(__DIR__ . '/../package.json'), true)['config']['skiddph'] ?? [];
+        $host = @$cfg['host'] ?: 'localhost';
+        $port = @$cfg['port'] ?: 3000;
+        $https = @$cfg['https'] ?: false;
+        $proto = $https ? 'https' : 'http';
+        $base_uri = "$proto://$host:$port";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $base_uri);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+        $output = curl_exec($ch);
+        curl_close($ch);
+
+        if ($output === false) {
+            echo "Vite is not running in <a href=\"$base_uri\">$base_uri</a>. Please run \"npm run dev\" in the root directory.";
+            exit;
+        }
+
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+
+        $router->static('/src/', __DIR__ . '/../src');
+        $router->fallback($path, function () use ($base_uri, $main) {
+            ?>
+            <!DOCTYPE html>
+            <html lang="en">
+
+            <head>
+                <meta charset="UTF-8" />
+                <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>Vite + Vue</title>
+            </head>
+
+            <body>
+                <div id="app"></div>
+                <script type="module" src="<?= $base_uri ?>/@vite/client"></script>
+                <script type="module" src="<?= $base_uri ?>/<?= $main ?>"></script>
+            </body>
+
+            </html>
+            <?php
+        });
+
+        return;
+    }
+
+    $dist = __DIR__ . '/../dist';
+
+    $router->static($path, $dist, function ($state) {
+        $basename = basename(@$state->params['file']);
+        if ($basename === 'manifest.json' || $basename === 'index.html') {
+            return $state->skip();
+        }
+        return $state->next();
+    });
+
+    $router->fallback($path, function () use ($dist, $main) {
+
+        $manifest = json_decode(file_get_contents($dist . '/manifest.json'), true);
+
+        $css = [];
+        $entry = 'main.js';
+        if (isset($manifest[$main]) && isset($manifest[$main]['isEntry']) && $manifest[$main]['isEntry'] === true) {
+            $entry = $manifest[$main]['file'];
+            $css = @$manifest[$main]['css'] ?? [];
+        }
+
+        ?>
+        <!DOCTYPE html>
+        <html lang="en">
+
+        <head>
+            <meta charset="UTF-8" />
+            <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>Vite + Vue</title>
+            <?php foreach ($css as $c): ?>
+                <link rel="stylesheet" href="/<?= $c ?>" />
+            <?php endforeach; ?>
+        </head>
+
+        <body>
+            <div id="app"></div>
+            <script type="module" src="/<?= $entry ?>"></script>
+        </body>
+
+        </html>
+        <?php
+    });
 }
