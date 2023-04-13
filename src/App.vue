@@ -10,5 +10,7 @@ user.init(() => api.getUser())
 
 <template>
   <RouterView />
-  <div id="global-dialogs"></div>
+  <Teleport to="body">
+    <div id="global-dialogs"></div>
+  </Teleport>
 </template>
