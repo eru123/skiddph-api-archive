@@ -192,9 +192,9 @@ function vite(Router &$router, array $cfg = [])
 
             <head>
                 <meta charset="UTF-8" />
-                <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+                <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-                <title>Vite + Vue</title>
+                <title>Skidd PH</title>
             </head>
 
             <body>
@@ -250,9 +250,9 @@ function vite(Router &$router, array $cfg = [])
 
         <head>
             <meta charset="UTF-8" />
-            <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+            <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Vite + Vue</title>
+            <title>Skidd PH</title>
             <?php foreach ($css as $c): ?>
                 <link rel="stylesheet" href="/<?= $c ?>" />
             <?php endforeach; ?>
