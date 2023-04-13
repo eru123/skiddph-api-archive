@@ -11,12 +11,12 @@ export default defineConfig({
   base: './',
   build: {
     manifest: true,
-    outDir: 'dist',
+    outDir: packageJson?.config?.skiddph?.dist || 'dist',
     emptyOutDir: true,
     assetsDir: '__',
     rollupOptions: {
       input: {
-        main: 'src/main.js'
+        main: packageJson?.config?.skiddph?.main || 'src/main.js'
       }
     }
   },

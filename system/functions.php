@@ -144,6 +144,7 @@ function vite(Router &$router, array $cfg = [])
 {
     global $__vite_spa__;
     $path = '/';
+
     if (isset($__vite_spa__) && $__vite_spa__) {
         throw new Exception("We only support Vite for SPA, please use one vite instance", 500);
     }
@@ -155,12 +156,12 @@ function vite(Router &$router, array $cfg = [])
         'index.html',
     ];
 
+    $cfg = array_merge((@json_decode(file_get_contents(__DIR__ . '/../package.json'), true)['config']['skiddph'] ?? []), $cfg);
     $main = @$cfg['main'] ?: 'src/main.js';
     $reactjs = @$cfg['reactjs'] ?: false;
 
     if (e('ENV', 'production') === 'development') {
         $router->static($path, __DIR__ . '/../private_http_static');
-        $cfg = @json_decode(file_get_contents(__DIR__ . '/../package.json'), true)['config']['skiddph'] ?? [];
         $host = @$cfg['host'] ?: 'localhost';
         $port = @$cfg['port'] ?: 3000;
         $https = @$cfg['https'] ?: false;
@@ -197,8 +198,8 @@ function vite(Router &$router, array $cfg = [])
             </head>
 
             <body>
-                <div id="app"></div>
                 <?php if ($reactjs): ?>
+                    <div id="root"></div>
                     <script type="module">
                         import RefreshRuntime from '<?= $base_uri ?>/@react-refresh'
                         RefreshRuntime.injectIntoGlobalHook(window)
@@ -206,6 +207,8 @@ function vite(Router &$router, array $cfg = [])
                         window.$RefreshSig$ = () => (type) => type
                         window.__vite_plugin_react_preamble_installed__ = true
                     </script>
+                <?php else: ?>
+                    <div id="app"></div>
                 <?php endif; ?>
                 <script type="module" src="<?= $base_uri ?>/@vite/client"></script>
                 <script type="module" src="<?= $base_uri ?>/<?= $main ?>"></script>
@@ -218,8 +221,10 @@ function vite(Router &$router, array $cfg = [])
         return;
     }
 
-    $dist = __DIR__ . '/../dist';
-
+    $dist = realpath(isset($cfg['dist']) ? __DIR__ . '/../' . $cfg['dist'] : __DIR__ . '/../dist');
+    if (!is_dir($dist)) {
+        throw new Exception("Vite dist folder not found in $dist", 500);
+    }
     $router->static($path, $dist, function ($state) use ($forbidden_files) {
         $basename = basename(@$state->params['file']);
         if (in_array($basename, $forbidden_files)) {
@@ -228,7 +233,7 @@ function vite(Router &$router, array $cfg = [])
         return $state->next();
     });
 
-    $router->fallback($path, function () use ($dist, $main) {
+    $router->fallback($path, function () use ($dist, $main, $reactjs) {
 
         $manifest = json_decode(file_get_contents($dist . '/manifest.json'), true);
 
@@ -254,7 +259,11 @@ function vite(Router &$router, array $cfg = [])
         </head>
 
         <body>
-            <div id="app"></div>
+            <?php if ($reactjs): ?>
+                <div id="root"></div>
+            <?php else: ?>
+                <div id="app"></div>
+            <?php endif; ?>
             <script type="module" src="/<?= $entry ?>"></script>
         </body>
 

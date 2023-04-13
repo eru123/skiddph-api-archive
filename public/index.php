@@ -15,9 +15,7 @@ $main->bootstrap([
     [Builtin::class, 'remove_header_ads'],
 ]);
 
-vite($main, [
-    'main' => 'src/main.js'
-]);
+vite($main);
 
 $main->child($api);
 $main->run();
