@@ -15,11 +15,7 @@ $main->bootstrap([
     [Builtin::class, 'remove_header_ads'],
 ]);
 
-vite($main, '/admin', [
-    'main' => 'src/admin.js'
-]);
-
-vite($main, '/', [
+vite($main, [
     'main' => 'src/main.js'
 ]);
 

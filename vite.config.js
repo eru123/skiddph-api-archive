@@ -16,8 +16,7 @@ export default defineConfig({
     assetsDir: '__',
     rollupOptions: {
       input: {
-        main: 'src/main.js',
-        admin: 'src/admin.js'
+        main: 'src/main.js'
       }
     }
   },

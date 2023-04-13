@@ -140,14 +140,23 @@ function datetime_init()
  * Vite Routing Injector
  */
 
-function vite(Router &$router, string $path = '/', array $cfg = [])
+function vite(Router &$router, array $cfg = [])
 {
+    global $__vite_spa__;
+    $path = '/';
+    if (isset($__vite_spa__) && $__vite_spa__) {
+        throw new Exception("We only support Vite for SPA, please use one vite instance", 500);
+    }
+
+    $__vite_spa__ = true;
+
     $forbidden_files = [
         'manifest.json',
         'index.html',
     ];
 
     $main = @$cfg['main'] ?: 'src/main.js';
+    $reactjs = @$cfg['reactjs'] ?: false;
 
     if (e('ENV', 'production') === 'development') {
         $router->static($path, __DIR__ . '/../private_http_static');
@@ -175,7 +184,7 @@ function vite(Router &$router, string $path = '/', array $cfg = [])
         header('Pragma: no-cache');
 
         $router->static('/src/', __DIR__ . '/../src');
-        $router->fallback($path, function () use ($base_uri, $main) {
+        $router->fallback($path, function () use ($base_uri, $main, $reactjs) {
             ?>
             <!DOCTYPE html>
             <html lang="en">
@@ -189,6 +198,15 @@ function vite(Router &$router, string $path = '/', array $cfg = [])
 
             <body>
                 <div id="app"></div>
+                <?php if ($reactjs): ?>
+                    <script type="module">
+                        import RefreshRuntime from '<?= $base_uri ?>/@react-refresh'
+                        RefreshRuntime.injectIntoGlobalHook(window)
+                        window.$RefreshReg$ = () => { }
+                        window.$RefreshSig$ = () => (type) => type
+                        window.__vite_plugin_react_preamble_installed__ = true
+                    </script>
+                <?php endif; ?>
                 <script type="module" src="<?= $base_uri ?>/@vite/client"></script>
                 <script type="module" src="<?= $base_uri ?>/<?= $main ?>"></script>
             </body>
@@ -202,9 +220,9 @@ function vite(Router &$router, string $path = '/', array $cfg = [])
 
     $dist = __DIR__ . '/../dist';
 
-    $router->static($path, $dist, function ($state) {
+    $router->static($path, $dist, function ($state) use ($forbidden_files) {
         $basename = basename(@$state->params['file']);
-        if ($basename === 'manifest.json' || $basename === 'index.html') {
+        if (in_array($basename, $forbidden_files)) {
             return $state->skip();
         }
         return $state->next();
