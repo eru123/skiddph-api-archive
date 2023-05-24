@@ -16,6 +16,8 @@ final class AuthEmailOtp extends AbstractMigration
             `callback` VARCHAR(255) NULL,
             `used` TINYINT(1) NOT NULL DEFAULT 0,
             `created_at` DATETIME NULL,
+            `updated_at` DATETIME NULL,
+            `deleted_at` DATETIME NULL,
             PRIMARY KEY (`id`)
         )");
     }

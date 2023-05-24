@@ -6,6 +6,7 @@ class Phinx
 {
     public static function migrations()
     {
-        return __DIR__ . '/db/migrations';
+        return null;
+        // return __DIR__ . '/db/migrations';
     }
 }

@@ -161,7 +161,7 @@ function vite(Router &$router, array $cfg = [])
     $reactjs = @$cfg['reactjs'] ?: false;
 
     if (e('ENV', 'production') === 'development') {
-        $router->static($path, __DIR__ . '/../private_http_static');
+        $router->static($path, __DIR__ . '/../src/public');
         $host = @$cfg['host'] ?: 'localhost';
         $port = @$cfg['port'] ?: 3000;
         $https = @$cfg['https'] ?: false;
@@ -175,18 +175,26 @@ function vite(Router &$router, array $cfg = [])
         $output = curl_exec($ch);
         curl_close($ch);
 
-        if ($output === false) {
-            echo "Vite is not running in <a href=\"$base_uri\">$base_uri</a>. Please run \"npm run dev\" in the root directory.";
-            exit;
-        }
-
         header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         header('Cache-Control: post-check=0, pre-check=0', false);
         header('Pragma: no-cache');
 
-        $router->static('/src/', __DIR__ . '/../src');
-        $router->fallback($path, function () use ($base_uri, $main, $reactjs) {
-            ?>
+        $router->static('/src/', __DIR__ . '/../src', function () use ($output, $base_uri) {
+            if ($output === false) {
+                echo "Vite is not running in <a href=\"$base_uri\">$base_uri</a>. Please run \"npm run dev\" in the root directory.";
+                exit;
+            }
+        });
+        $router->fallback(
+            $path,
+            function () use ($output, $base_uri) {
+                if ($output === false) {
+                    echo "Vite is not running in <a href=\"$base_uri\">$base_uri</a>. Please run \"npm run dev\" in the root directory.";
+                    exit;
+                }
+            },
+            function () use ($base_uri, $main, $reactjs) {
+?>
             <!DOCTYPE html>
             <html lang="en">
 
@@ -198,16 +206,16 @@ function vite(Router &$router, array $cfg = [])
             </head>
 
             <body>
-                <?php if ($reactjs): ?>
+                <?php if ($reactjs) : ?>
                     <div id="root"></div>
                     <script type="module">
                         import RefreshRuntime from '<?= $base_uri ?>/@react-refresh'
                         RefreshRuntime.injectIntoGlobalHook(window)
-                        window.$RefreshReg$ = () => { }
+                        window.$RefreshReg$ = () => {}
                         window.$RefreshSig$ = () => (type) => type
                         window.__vite_plugin_react_preamble_installed__ = true
                     </script>
-                <?php else: ?>
+                <?php else : ?>
                     <div id="app"></div>
                 <?php endif; ?>
                 <script type="module" src="<?= $base_uri ?>/@vite/client"></script>
@@ -215,22 +223,27 @@ function vite(Router &$router, array $cfg = [])
             </body>
 
             </html>
-            <?php
-        });
+        <?php
+            }
+        );
 
         return;
     }
 
     $dist = realpath(isset($cfg['dist']) ? __DIR__ . '/../' . $cfg['dist'] : __DIR__ . '/../dist');
-    if (!is_dir($dist)) {
-        throw new Exception("Vite dist folder not found in $dist", 500);
-    }
+    
     $router->static($path, $dist, function ($state) use ($forbidden_files) {
         $basename = basename(@$state->params['file']);
         if (in_array($basename, $forbidden_files)) {
             return $state->skip();
         }
         return $state->next();
+    }, function ($state) use ($dist) {
+        if (!is_dir($dist)) {
+            throw new Exception("Vite dist folder not found in $dist", 500);
+        }
+        
+        $state->next();
     });
 
     $router->fallback($path, function () use ($dist, $main, $reactjs) {
@@ -253,21 +266,21 @@ function vite(Router &$router, array $cfg = [])
             <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0" />
             <title>Skidd PH</title>
-            <?php foreach ($css as $c): ?>
+            <?php foreach ($css as $c) : ?>
                 <link rel="stylesheet" href="/<?= $c ?>" />
             <?php endforeach; ?>
         </head>
 
         <body>
-            <?php if ($reactjs): ?>
+            <?php if ($reactjs) : ?>
                 <div id="root"></div>
-            <?php else: ?>
+            <?php else : ?>
                 <div id="app"></div>
             <?php endif; ?>
             <script type="module" src="/<?= $entry ?>"></script>
         </body>
 
         </html>
-        <?php
+<?php
     });
 }

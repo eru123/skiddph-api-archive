@@ -30,6 +30,12 @@ class Users extends Model
             'length' => 255,
             'null' => true,
         ],
+        'status' => [
+            'type' => 'varchar',
+            'length' => 255,
+            'default' => 'active',
+            'null' => false,
+        ],
         'created_at' => [
             'type' => 'datetime',
             'null' => true,
@@ -38,11 +44,9 @@ class Users extends Model
             'type' => 'datetime',
             'null' => true,
         ],
-        'status' => [
-            'type' => 'varchar',
-            'length' => 255,
-            'default' => 'active',
-            'null' => false,
+        'deleted_at' => [
+            'type' => 'datetime',
+            'null' => true,
         ],
     ];
 

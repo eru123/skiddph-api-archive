@@ -14,14 +14,15 @@ final class AuthUsers extends AbstractMigration
             `hash` VARCHAR(255) NOT NULL,
             `last_user` VARCHAR(255) NULL,
             `last_hash` VARCHAR(255) NULL,
-            `created_at` DATETIME NULL,
-            `updated_at` DATETIME NULL,
             `status` VARCHAR(255) NOT NULL DEFAULT 'active',
             `fname` VARCHAR(255) NULL,
             `lname` VARCHAR(255) NULL,
             `mname` VARCHAR(255) NULL,
             `extra` JSON NULL,
             `roles` JSON NULL,
+            `created_at` DATETIME NULL,
+            `updated_at` DATETIME NULL,
+            `deleted_at` DATETIME NULL,
             PRIMARY KEY (`id`)
         )");
     }

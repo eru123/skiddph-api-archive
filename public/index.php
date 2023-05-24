@@ -15,7 +15,11 @@ $main->bootstrap([
     [Builtin::class, 'remove_header_ads'],
 ]);
 
-vite($main);
+$main->get('/test', function() {
+    require __DIR__ . '/../test.php';
+});
+
+// vite($main);
 
 $main->child($api);
 $main->run();

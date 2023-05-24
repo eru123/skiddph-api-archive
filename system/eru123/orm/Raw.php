@@ -11,11 +11,11 @@ class Raw
 
     public function __construct(protected string $sql, protected array $params = [])
     {
-        if (!empty($params)) {
-            $this->query = $sql;
+        $this->query = $sql;
 
+        if (!empty($params)) {
             $tmp_params = [];
-            if (array_keys($params) === range(0, count($params) - 1)) {
+            if (static::is_array($params)) {
                 foreach ($params as $index => $param) {
                     $param_key = ':p__' . $index;
                     $this->query = preg_replace('/\?/', $param_key, $this->query, 1);
@@ -34,6 +34,8 @@ class Raw
                     $value = 'NULL';
                 } elseif (is_bool($param)) {
                     $value = $param ? 1 : 0;
+                } else if (is_array($param)) {
+                    $value = static::in($param);
                 } else {
                     $value = "'" . addslashes($param) . "'";
                 }
@@ -42,6 +44,12 @@ class Raw
             }
         }
     }
+
+    private static function is_array($value)
+    {
+        return array_keys($value) === range(0, count($value) - 1);
+    }
+
     public function __toString(): string
     {
         return $this->query ?? $this->sql;
@@ -50,8 +58,63 @@ class Raw
     {
         return $this->__toString();
     }
-    public static function build(string $sql, array $params = []): Raw
+    public static function build(...$args): static
     {
-        return new static($sql, $params);
+        return new static(...$args);
+    }
+
+    public static function columns(string|array $names, $wrapper = '`'): static
+    {
+        if (empty($names)) return new static('');
+        if (!is_array($names)) {
+            $names = [$names];
+        }
+
+        if (static::is_array($names)) {
+            $sql = $wrapper . implode("{$wrapper}, {$wrapper}", array_values($names)) . $wrapper;
+            return new static($sql);
+        } else {
+            $selects = [];
+            foreach ($names as $alias => $name) {
+                $name = preg_replace('/\./', "{$wrapper}.{$wrapper}", $name);
+                if (is_numeric($alias)) {
+                    $selects[] = "{$wrapper}{$name}{$wrapper}";
+                } else {
+                    $name = preg_match('/\(/', $name) ? new static($name) : "{$wrapper}{$name}{$wrapper}";
+                    $selects[] = "{$name} AS {$wrapper}{$alias}{$wrapper}";
+                }
+            }
+
+            $sql = implode(', ', $selects);
+            return new static($sql);
+        }
+    }
+
+    public static function in(array $values): static
+    {
+        $sql = implode(', ', array_map(function ($value) {
+            if ($value instanceof static) {
+                return $value->__toString();
+            } elseif (is_numeric($value)) {
+                return $value;
+            } elseif (is_null($value)) {
+                return 'NULL';
+            } elseif (is_bool($value)) {
+                return $value ? 1 : 0;
+            } else {
+                return "'" . addslashes($value) . "'";
+            }
+        }, $values));
+
+        return new static("({$sql})");
+    }
+
+    public static function table(string $name,string $alias = null): static 
+    {
+        $sql = "`{$name}`";
+        if ($alias) {
+            $sql .= " AS `{$alias}`";
+        }
+        return new static($sql);
     }
 }

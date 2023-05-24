@@ -42,5 +42,13 @@ class UserEmailOtp extends Model
             'type' => 'datetime',
             'null' => false,
         ],
+        'updated_at' => [
+            'type' => 'datetime',
+            'null' => false,
+        ],
+        'deleted_at' => [
+            'type' => 'datetime',
+            'null' => true,
+        ],
     ];
 }
