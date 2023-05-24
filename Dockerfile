@@ -50,7 +50,10 @@ HEALTHCHECK CMD wget -q --no-cache --spider localhost
 ENTRYPOINT ["php", "-S", "0.0.0.0:80", "public/index.php"]
 
 # Build the image
-# docker build -t api .
+# docker build -t lms .
 
 # Run the container
-# docker run -d -p 3030:80 api
+# docker run -d -p 3031:80 --name lms lms
+
+# Rebuild the container
+# docker build -t lms . && docker stop lms && docker rm lms && docker run -d -p 3031:80 --name lms lms

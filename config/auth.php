@@ -51,7 +51,7 @@ return [
      */
     'allow_signup' => true,
     /**
-     * Email resend if time less than or equal to specified time
+     * Email allow resend if time less than or equal to specified time
      */
     'email_resend_if_time' => '5mins',
     /**

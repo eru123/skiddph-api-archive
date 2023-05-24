@@ -2,28 +2,17 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import packageJson from './package.json'
 import { fileURLToPath, URL } from 'node:url'
-import legacy from '@vitejs/plugin-legacy'
-import Icons from 'unplugin-icons/vite'
-import image from '@rollup/plugin-image'
 
 export default defineConfig({
   plugins: [
-    {
-      ...image(),
-      enforce: 'pre',
-    },
-    vue(),
-    Icons({ compiler: 'vue3' }),
-    legacy({
-      targets: ['defaults', 'not IE 11'],
-    })
+    vue()
   ],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  publicDir: 'private_http_static',
+  publicDir: 'src/public',
   base: './',
   build: {
     manifest: true,

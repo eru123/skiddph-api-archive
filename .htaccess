@@ -1,23 +1,18 @@
 DirectoryIndex index.php
+<IfModule mod_rewrite.c>
 
-# enable apache rewrite engine
-RewriteEngine on
+    RewriteEngine On
+    RewriteBase /
 
-# set your rewrite base
-# Edit this in your init method too if you script lives in a subfolder
-RewriteBase /
+    RewriteRule ^$ public/index.php [L]
+    RewriteRule ^((?!public/).*)$ public/$1 [L,NC]
 
-# Deliver the folder or file directly if it exists on the server
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+    # Rewrite for HTTP_AUTHORIZATION
+    RewriteCond %{HTTP:Authorization} ^(.*)
+    RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
 
-# Push every request to index.php
-RewriteRule ^(.*)$ index.php [QSA]
+    # Security
+    Header set Referrer-Policy "no-referrer"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+</IfModule>
 
-# Rewrite for HTTP_AUTHORIZATION
-RewriteCond %{HTTP:Authorization} ^(.*)
-RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
-
-# Security
-Header set Referrer-Policy "no-referrer"
-Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"

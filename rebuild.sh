@@ -1,0 +1,1 @@
+docker build -t lms . && docker stop lms && docker rm lms && docker run -d -p 3030:80 --name lms lms

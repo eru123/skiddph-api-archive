@@ -15,8 +15,18 @@
         ".env",
         "vendor",
         "composer.lock",
-        "composer.json",
         "LICENSE",
-        "README.md"
+        "README.md",
+        "src",
+        "db",
+        "cmd",
+        ".gitignore",
+        "pnpm-lock.yaml",
+        "postcss.config.cjs",
+        "tailwind.config.cjs",
+        "vite.config.js",
+        "package.json",
+        "test.php",
+        ".env.example"
     ]
 }
