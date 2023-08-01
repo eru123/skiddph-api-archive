@@ -1,3 +1,6 @@
+### PROJECT MOVED
+Project has been moved to https://github.com/eru123/jericho.work
+
 # API
 An out of the box complete and centralized general purpose API system that aims to power you web development journey.
 
